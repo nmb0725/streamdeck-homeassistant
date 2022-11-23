@@ -170,6 +170,7 @@ export default {
 
         changedContexts.forEach(context => {
           try {
+          
             if(stateMessage.last_updated != null) stateMessage.attributes["last_updated"] = new Date(stateMessage.last_updated).toLocaleTimeString();
             if(stateMessage.last_changed != null) stateMessage.attributes["last_changed"] = new Date(stateMessage.last_changed).toLocaleTimeString();
 
