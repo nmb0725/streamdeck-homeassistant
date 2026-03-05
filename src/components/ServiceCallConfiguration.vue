@@ -139,7 +139,6 @@ onMounted(() => {
 })
 
 function update(key, value) {
-  console.log(`Update ${key} to ${JSON.stringify(value)}`)
   emit('update:modelValue', { ...props.modelValue, [key]: value })
 }
 
@@ -153,10 +152,7 @@ const availableDomains = computed(() => {
   if (!props.availableServices.length) {
     return []
   }
-  return props.availableServices
-    .map((service) => service.domain)
-    .filter((element, index, array) => array.indexOf(element) === index)
-    .sort()
+  return [...new Set(props.availableServices.map((service) => service.domain))].sort()
 })
 
 const domainServices = computed(() => {
@@ -177,9 +173,9 @@ const domainEntities = computed(() => {
   ) {
     return []
   }
-  let selectedService = props.availableServices.filter(
+  const selectedService = props.availableServices.find(
     (service) => service.serviceId === props.modelValue.serviceId
-  )[0]
+  )
   if (selectedService && selectedService.target && selectedService.target.entity) {
     // target.entity may contain a single or an array of entities. Make sure we always work with array.
     let targetEntities = ensureArray(selectedService.target.entity)
@@ -227,9 +223,9 @@ const dataProperties = computed(() => {
   ) {
     return []
   }
-  let selectedService = props.availableServices.filter(
+  const selectedService = props.availableServices.find(
     (service) => service.serviceId === props.modelValue.serviceId
-  )[0]
+  )
   if (!selectedService || !selectedService.dataFields) {
     return []
   }

@@ -238,14 +238,9 @@ function updateContextState(currentContext, domain, stateObject) {
     contextSettings.display
   )
 
-  renderingConfig.isAction =
-    contextSettings.button.serviceShortPress.serviceId &&
-    (contextSettings.display.enableServiceIndicator === undefined ||
-      contextSettings.display.enableServiceIndicator) // undefined = on by default
-  renderingConfig.isMultiAction =
-    contextSettings.button.serviceLongPress.serviceId &&
-    (contextSettings.display.enableServiceIndicator === undefined ||
-      contextSettings.display.enableServiceIndicator) // undefined = on by default
+  const showIndicators = contextSettings.display.enableServiceIndicator !== false // undefined = on by default
+  renderingConfig.isAction = contextSettings.button.serviceShortPress.serviceId && showIndicators
+  renderingConfig.isMultiAction = contextSettings.button.serviceLongPress.serviceId && showIndicators
 
   if (renderingConfig.rotationPercent !== undefined) {
     rotationPercent[currentContext] = renderingConfig.rotationPercent
@@ -255,7 +250,7 @@ function updateContextState(currentContext, domain, stateObject) {
     let state = stateObject.state
     let stateAttributes = stateObject.attributes
     renderingConfig.customTitle = nunjucks.renderString(contextSettings.display.buttonTitle, {
-      ...{ state },
+      state,
       ...stateAttributes
     })
   }
@@ -281,7 +276,7 @@ function updateContextState(currentContext, domain, stateObject) {
       renderingConfig.feedback.value = svgUtils
         .renderTemplates(renderingConfig.labelTemplates, {
           ...stateObject.attributes,
-          ...{ state: stateObject.state }
+          state: stateObject.state
         })
         .join(' ')
     }
@@ -302,15 +297,6 @@ function updateContextState(currentContext, domain, stateObject) {
       $SD.value.setTitle(currentContext, renderingConfig.customTitle)
     }
 
-    renderingConfig.isAction =
-      contextSettings.button.serviceShortPress.serviceId &&
-      (contextSettings.display.enableServiceIndicator === undefined ||
-        contextSettings.display.enableServiceIndicator) // undefined = on by default
-    renderingConfig.isMultiAction =
-      contextSettings.button.serviceLongPress.serviceId &&
-      (contextSettings.display.enableServiceIndicator === undefined ||
-        contextSettings.display.enableServiceIndicator) // undefined = on by default
-
     if (!renderingConfig.color) {
       renderingConfig.color =
         activeStates.value.indexOf(stateObject.state) !== -1
@@ -324,13 +310,7 @@ function updateContextState(currentContext, domain, stateObject) {
 }
 
 function setButtonSVG(svg, changedContext) {
-  const image = 'data:image/svg+xml;,' + svg
-  if (actionSettings.value[changedContext].controllerType === 'Encoder') {
-    $SD.value.setFeedbackLayout(changedContext, { layout: '$A0' })
-    $SD.value.setFeedback(changedContext, { 'full-canvas': image, canvas: null, title: '' })
-  } else {
-    $SD.value.setImage(changedContext, image)
-  }
+  $SD.value.setImage(changedContext, 'data:image/svg+xml;,' + svg)
 }
 
 function buttonDown(context) {

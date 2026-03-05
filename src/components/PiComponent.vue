@@ -443,7 +443,7 @@ function updateManifest() {
     .get(
       'https://cdn.jsdelivr.net/gh/cgiesche/streamdeck-homeassistant@master/public/config/manifest.yml'
     )
-    .then((response) => (this.manifest = yaml.load(response.data)))
+    .then((response) => (manifest.value = yaml.load(response.data)))
     .catch((error) => console.log(`Failed to download updated manifest.yml: ${error}`))
 }
 

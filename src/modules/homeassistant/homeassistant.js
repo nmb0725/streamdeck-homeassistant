@@ -21,8 +21,8 @@ export class Homeassistant {
   }
 
   close() {
-    this.websocket.onclose = null
     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+      this.websocket.onclose = null
       this.websocket.close()
     }
   }
@@ -36,7 +36,7 @@ export class Homeassistant {
         break
       case 'result':
         if (!messageData.success) {
-          throw messageData.error.message
+          throw new Error(messageData.error.message)
         }
         if (this.requests.has(messageData.id)) {
           this.requests.get(messageData.id)(messageData.result)
