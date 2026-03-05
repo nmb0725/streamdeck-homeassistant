@@ -4,7 +4,7 @@
     <!-- ── Connection status bar (collapsed global settings) ──────────────── -->
     <div v-if="!globalSettingsExpanded" class="pi-connection-bar mb-3">
       <span class="pi-status-dot connected" aria-hidden="true"></span>
-      <span class="text-truncate flex-grow-1 small text-muted">{{ serverUrl }}</span>
+      <span class="text-truncate flex-grow-1 small text-muted">Connection: {{ serverUrl }}</span>
       <button
         class="btn btn-sm btn-outline-secondary py-0 px-2 ms-1 flex-shrink-0"
         style="font-size: 0.7rem"
@@ -108,10 +108,18 @@
         ></span>
         {{ haConnectionState === 'connected' ? 'Save and reconnect' : 'Save and connect' }}
       </button>
+      <button
+        v-if="haConnectionState === 'connected'"
+        class="btn btn-sm btn-outline-secondary w-100 mt-2"
+        type="button"
+        @click="globalSettingsExpanded = false"
+      >
+        Close
+      </button>
     </div>
 
     <!-- ── Appearance ─────────────────────────────────────────────────────── -->
-    <div v-if="haConnectionState === 'connected'" class="mb-3">
+    <div v-if="haConnectionState === 'connected' && !globalSettingsExpanded" class="mb-3">
       <p class="pi-section-header">{{ controllerType }} Appearance</p>
 
       <EntitySelection
