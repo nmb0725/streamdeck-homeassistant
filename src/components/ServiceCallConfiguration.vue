@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div class="mb-3">
+    <div class="mb-2">
       <label class="form-label" for="domain">Domain</label>
-      <div class="input-group">
+      <div class="input-group input-group-sm">
         <select
           id="domain"
           v-model="selectedDomain"
@@ -18,18 +18,19 @@
           </option>
         </select>
         <button
-          class="btn btn-sm btn-outline-secondary"
+          class="btn btn-outline-secondary"
           type="button"
+          aria-label="Clear domain selection"
           @click="(selectedDomain = '', clear('serviceId', 'entityId', 'serviceData'))"
         >
-          Clear
+          ✕
         </button>
       </div>
     </div>
 
-    <div v-if="selectedDomain" class="mb-3">
+    <div v-if="selectedDomain" class="mb-2">
       <label class="form-label" for="service">Service</label>
-      <div class="input-group">
+      <div class="input-group input-group-sm">
         <select
           id="service"
           :value="modelValue.serviceId"
@@ -45,29 +46,36 @@
           </option>
         </select>
         <button
-          class="btn btn-sm btn-outline-secondary"
+          class="btn btn-outline-secondary"
           type="button"
+          aria-label="Clear service selection"
           @click="clear('serviceId', 'entityId', 'serviceData')"
         >
-          Clear
+          ✕
         </button>
       </div>
     </div>
 
-    <div v-if="domainEntities.length > 0" class="mb-3">
+    <div v-if="domainEntities.length > 0" class="mb-2">
       <EntitySelection
-        class="mb-3"
         :available-entities="domainEntities"
         @change="update('entityId', $event.target.value)"
         :model-value="props.modelValue.entityId"
       ></EntitySelection>
-      <button class="btn btn-sm btn-outline-secondary" type="button" @click="clear('entityId')">
-        Clear
+      <button
+        class="btn btn-sm btn-outline-secondary mt-1"
+        type="button"
+        aria-label="Clear entity selection"
+        @click="clear('entityId')"
+      >
+        Clear entity
       </button>
     </div>
 
     <template v-if="props.modelValue.serviceId">
-      <label class="form-label" for="serviceData">Service Data JSON (Optional)</label>
+      <label class="form-label" for="serviceData">Service data JSON
+        <span class="text-muted fw-normal">(optional)</span>
+      </label>
       <textarea
         id="serviceData"
         :class="{ 'is-invalid': serviceDataInvalidFeedback }"
@@ -83,18 +91,17 @@
         {{ serviceDataInvalidFeedback }}
       </div>
 
-      <details v-if="dataProperties && dataProperties.length > 0">
+      <details class="pi-vars mt-1" v-if="dataProperties && dataProperties.length > 0">
         <summary>Available options</summary>
-        <div v-for="item in dataProperties" v-bind:key="item.name" class="form-text">
-          <span class="text-info font-monospace">{{ item.name }}&nbsp;</span>
-          <span class="text-warning font-monospace" v-if="item.info.required">(required) </span
-          >{{ item.info.description }}
-          <template v-if="item.info.example">
-            <br />
-            <span class="ml-2"
-              >Example: <i>{{ item.info.example }}</i></span
-            >
-          </template>
+        <div class="pi-vars-content">
+          <div v-for="item in dataProperties" v-bind:key="item.name" class="form-text">
+            <span class="text-info font-monospace">{{ item.name }}</span>
+            <span class="text-warning font-monospace" v-if="item.info.required"> (required)</span>
+            — {{ item.info.description }}
+            <template v-if="item.info.example">
+              <br /><span class="text-muted">Example: <i>{{ item.info.example }}</i></span>
+            </template>
+          </div>
         </div>
       </details>
     </template>

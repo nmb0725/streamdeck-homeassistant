@@ -2,10 +2,13 @@
   <div>
     <label class="form-label" for="entity">Entity</label>
     <input
-      type="text"
+      type="search"
       class="form-control form-control-sm mb-1"
       v-model="entityFilter"
-      placeholder="Filter by name or entity_id..."
+      placeholder="Filter by name or entity ID…"
+      aria-label="Filter entities"
+      autocomplete="off"
+      spellcheck="false"
     />
     <select
       size="5"

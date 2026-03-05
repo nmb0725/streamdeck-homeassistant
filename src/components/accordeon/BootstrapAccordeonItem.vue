@@ -10,7 +10,12 @@
         :aria-controls="'collapse' + itemId"
       >
         {{ title }}
-        <span v-if="configured" class="ms-2 text-success" style="font-size: 0.6rem">&#9679;</span>
+        <span
+          v-if="configured"
+          class="badge bg-success ms-2"
+          style="font-size: 0.6rem; padding: 0.2em 0.45em; vertical-align: middle"
+          aria-label="Configured"
+        >&#10003;</span>
       </button>
     </h2>
     <div

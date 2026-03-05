@@ -1,112 +1,118 @@
 <template>
-  <div class="container-fluid">
-    <div v-if="!globalSettingsExpanded" class="d-flex align-items-center justify-content-between mb-3">
-      <div class="d-flex align-items-center gap-2">
-        <span class="badge text-bg-success">Connected</span>
-        <small class="text-muted text-truncate" style="max-width: 180px">{{ serverUrl }}</small>
-      </div>
-      <button class="btn btn-sm btn-outline-secondary" type="button" @click="globalSettingsExpanded = true">
+  <div class="pi-root">
+
+    <!-- ── Connection status bar (collapsed global settings) ──────────────── -->
+    <div v-if="!globalSettingsExpanded" class="pi-connection-bar mb-3">
+      <span class="pi-status-dot connected" aria-hidden="true"></span>
+      <span class="text-truncate flex-grow-1 small text-muted">{{ serverUrl }}</span>
+      <button
+        class="btn btn-sm btn-outline-secondary py-0 px-2 ms-1 flex-shrink-0"
+        style="font-size: 0.7rem"
+        type="button"
+        aria-label="Edit global settings"
+        @click="globalSettingsExpanded = true"
+      >
         Edit
       </button>
     </div>
 
-    <div v-if="globalSettingsExpanded" class="clearfix mb-3">
-      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">Global Settings</h6>
+    <!-- ── Global Settings ────────────────────────────────────────────────── -->
+    <div v-if="globalSettingsExpanded" class="mb-3">
+      <p class="pi-section-header mt-0">Global Settings</p>
+
       <div class="mb-3">
         <label class="form-label" for="serverUrl">Server URL</label>
         <input id="serverUrl" v-model="serverUrl" class="form-control form-control-sm" type="url" />
-        <div class="form-text"><strong>Without SSL</strong> ws://localhost:8123/api/websocket</div>
         <div class="form-text">
-          <strong>With SSL</strong> wss://ha.mydomain.net:8123/api/websocket (requires a trusted
-          certificate)
+          <span class="text-body-secondary">Without SSL:</span> ws://localhost:8123/api/websocket
+        </div>
+        <div class="form-text">
+          <span class="text-body-secondary">With SSL:</span> wss://ha.mydomain.net:8123/api/websocket
+          <span class="text-muted">(requires a trusted certificate)</span>
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="accessToken">Access-Token</label>
+        <label class="form-label" for="accessToken">Access Token</label>
         <input
           id="accessToken"
           v-model="accessToken"
           class="form-control form-control-sm"
           required
           type="password"
+          autocomplete="current-password"
         />
         <div class="form-text">
-          Long-lived access tokens can be created using the "Long-Lived Access Tokens" section at
-          the bottom of a user's Home Assistant profile page.
+          Create a long-lived token under your HA profile page.
           <a
-            class="info"
             href="https://developers.home-assistant.io/docs/auth_api/#long-lived-access-token"
             target="_blank"
-            >Home Assistant documentation</a
+            rel="noopener"
+            >Documentation</a
           >
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="displayConfig">Display configuration ("Theme")</label>
-        <div class="input-group">
-          <select
-            :disabled="displayConfigurationUrlOverride.length > 0"
-            id="displayConfig"
-            v-model="displayConfiguration"
-            class="form-select form-select-sm"
+        <label class="form-label" for="displayConfig">Display theme</label>
+        <select
+          :disabled="displayConfigurationUrlOverride.length > 0"
+          id="displayConfig"
+          v-model="displayConfiguration"
+          class="form-select form-select-sm"
+        >
+          <option
+            v-for="availableConfiguration in manifest['display-configs']"
+            :key="availableConfiguration"
+            :value="availableConfiguration"
           >
-            <option
-              v-for="availableConfiguration in manifest['display-configs']"
-              :key="availableConfiguration"
-              :value="availableConfiguration"
-            >
-              {{ availableConfiguration.title }}
-            </option>
-          </select>
-        </div>
+            {{ availableConfiguration.title }}
+          </option>
+        </select>
 
-        <div class="mt-3">
-          <label for="formFileSm" class="form-label">Custom display configuration URL</label>
-          <input
-            v-model="displayConfigurationUrlOverride"
-            class="form-control form-control-sm"
-            type="url"
-            placeholder="file://c:/custom.yml"
-          />
-          <div class="form-text">
-            Specify path or URL to customized display configuration. Unsupported!
-            <a
-              target="_blank"
-              href="https://raw.githubusercontent.com/cgiesche/streamdeck-homeassistant/master/public/config/default-display-config.yml"
-              >Example</a
-            >.
-          </div>
+        <label for="displayConfigUrlOverride" class="form-label mt-2">Custom theme URL</label>
+        <input
+          id="displayConfigUrlOverride"
+          v-model="displayConfigurationUrlOverride"
+          class="form-control form-control-sm"
+          type="url"
+          placeholder="file://c:/custom.yml"
+        />
+        <div class="form-text">
+          Override with a custom YAML config.
+          <a
+            target="_blank"
+            rel="noopener"
+            href="https://raw.githubusercontent.com/cgiesche/streamdeck-homeassistant/master/public/config/default-display-config.yml"
+            >Example</a
+          >
         </div>
       </div>
 
-      <div v-if="haError" class="alert alert-danger alert-dismissible" role="alert">
-        {{ haError }}
-        <button class="btn-close" type="button" @click="haError = ''"></button>
+      <div v-if="haError" class="alert alert-danger alert-dismissible py-2" role="alert">
+        <span class="small">{{ haError }}</span>
+        <button class="btn-close btn-close-sm" type="button" aria-label="Dismiss" @click="haError = ''"></button>
       </div>
 
       <button
         :disabled="!isHaSettingsComplete || haConnectionState === 'connecting'"
-        class="btn btn-sm btn-primary float-end"
+        class="btn btn-sm btn-primary w-100"
+        type="button"
         v-on:click="saveGlobalSettings"
       >
         <span
           v-if="haConnectionState === 'connecting'"
           aria-hidden="true"
-          class="spinner-border spinner-border-sm"
+          class="spinner-border spinner-border-sm me-1"
           role="status"
         ></span>
-        <span>{{
-          haConnectionState === 'connected' ? 'Save and reconnect' : 'Save and connect'
-        }}</span>
+        {{ haConnectionState === 'connected' ? 'Save and reconnect' : 'Save and connect' }}
       </button>
     </div>
 
-    <!-- ======================================================================================================= -->
-
-    <div v-if="haConnectionState === 'connected'" class="clearfix mb-3">
-      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">{{ controllerType }} appearance</h6>
+    <!-- ── Appearance ─────────────────────────────────────────────────────── -->
+    <div v-if="haConnectionState === 'connected'" class="mb-3">
+      <p class="pi-section-header">{{ controllerType }} Appearance</p>
 
       <EntitySelection
         class="mb-3"
@@ -114,181 +120,207 @@
         v-model="entity"
       ></EntitySelection>
 
-      <div class="form-check form-switch">
+      <!-- Custom title toggle -->
+      <div class="form-check form-switch mb-2">
         <input
           id="chkButtonTitle"
           v-model="useCustomTitle"
           class="form-check-input"
           type="checkbox"
+          role="switch"
         />
-        <label class="form-check-label" for="chkButtonTitle">Use custom title</label>
+        <label class="form-check-label" for="chkButtonTitle">Custom title</label>
       </div>
-
-      <div v-if="useCustomTitle">
-        <div class="mb-3">
-          <input
-            id="buttonTitle"
-            v-model="buttonTitle"
-            class="form-control form-control-sm"
-            placeholder="{{friendly_name}}"
-            type="text"
-          />
-          <span class="form-text text-danger"
-            >You have to clear the main title in the main stream deck window to make this title
-            template work.</span
-          >
-          <details>
-            <summary>Available variables</summary>
-            <div
-              v-for="attr in entityAttributes"
-              v-bind:key="attr"
-              class="form-text font-monospace"
-            >
+      <div v-if="useCustomTitle" class="mb-3 ps-1">
+        <input
+          id="buttonTitle"
+          v-model="buttonTitle"
+          class="form-control form-control-sm"
+          placeholder="{{friendly_name}}"
+          type="text"
+        />
+        <div class="form-text text-warning-emphasis">
+          Clear the title in the main Stream Deck window for this template to take effect.
+        </div>
+        <details class="pi-vars" v-if="entityAttributes.length">
+          <summary>Available variables</summary>
+          <div class="pi-vars-content">
+            <div v-for="attr in entityAttributes" v-bind:key="attr" class="form-text font-monospace">
               {{ attr }}
             </div>
-          </details>
-        </div>
+          </div>
+        </details>
       </div>
 
-      <div class="form-check form-switch">
+      <!-- Custom labels toggle -->
+      <div class="form-check form-switch mb-2">
         <input
           id="chkCustomLabels"
           v-model="useCustomButtonLabels"
           class="form-check-input"
           type="checkbox"
+          role="switch"
         />
         <label class="form-check-label" for="chkCustomLabels">Custom labels</label>
       </div>
-
-      <div v-if="useCustomButtonLabels">
-        <div class="mb-3">
-          <textarea
-            id="buttonLabels"
-            v-model="buttonLabels"
-            class="form-control font-monospace"
-            placeholder="Line 1 (may overlap with icon)"
-            rows="4"
-          ></textarea>
-          <details>
-            <summary>Available variables</summary>
-            <div
-              v-for="attr in entityAttributes"
-              v-bind:key="attr"
-              class="form-text font-monospace"
-            >
+      <div v-if="useCustomButtonLabels" class="mb-3 ps-1">
+        <textarea
+          id="buttonLabels"
+          v-model="buttonLabels"
+          class="form-control form-control-sm font-monospace"
+          placeholder="Line 1 (may overlap with icon)"
+          rows="4"
+        ></textarea>
+        <details class="pi-vars" v-if="entityAttributes.length">
+          <summary>Available variables</summary>
+          <div class="pi-vars-content">
+            <div v-for="attr in entityAttributes" v-bind:key="attr" class="form-text font-monospace">
               {{ attr }}
             </div>
-          </details>
-        </div>
+          </div>
+        </details>
       </div>
 
+      <!-- Service indicator (Keypad only) -->
       <template v-if="controllerType !== 'Encoder'">
-        <div class="form-check form-switch">
+        <div class="form-check form-switch mb-2">
           <input
             id="chkEnableServiceIndicator"
             v-model="enableServiceIndicator"
             class="form-check-input"
             type="checkbox"
+            role="switch"
           />
-          <label class="form-check-label" for="chkEnableServiceIndicator"
-            >Show visual service indicators</label
-          >
+          <label class="form-check-label" for="chkEnableServiceIndicator">
+            Visual service indicators
+          </label>
         </div>
       </template>
 
-      <div class="mt-3 mb-3">
-        <div class="form-check">
+      <!-- Icon source segmented control -->
+      <div class="mb-3 mt-3">
+        <label class="form-label d-block" id="iconSourceLabel">Icon source</label>
+        <div
+          class="btn-group w-100 pi-icon-btn-group"
+          role="group"
+          aria-labelledby="iconSourceLabel"
+        >
           <input
-            class="form-check-input"
             type="radio"
+            class="btn-check"
             id="radioPlugin"
             value="PREFER_PLUGIN"
             v-model="iconSettings"
+            autocomplete="off"
           />
-          <label class="form-check-label" for="radioPlugin">
-            Prefer icon from plugin (recommended)
-          </label>
-        </div>
-        <div class="form-check">
+          <label class="btn btn-outline-secondary" for="radioPlugin">Plugin</label>
+
           <input
-            class="form-check-input"
             type="radio"
+            class="btn-check"
             id="radioHomeAssistant"
             value="PREFER_HA"
             v-model="iconSettings"
+            autocomplete="off"
           />
-          <label class="form-check-label" for="radioHomeAssistant"> Prefer icon from HA </label>
-        </div>
-        <div class="form-check">
+          <label class="btn btn-outline-secondary" for="radioHomeAssistant">Home Assistant</label>
+
           <input
-            class="form-check-input"
             type="radio"
+            class="btn-check"
             id="radioHide"
             value="HIDE"
             v-model="iconSettings"
+            autocomplete="off"
           />
-          <label class="form-check-label" for="radioHide"> Hide icon </label>
+          <label class="btn btn-outline-secondary" for="radioHide">Hide</label>
+        </div>
+        <div class="form-text" v-if="iconSettings === 'PREFER_PLUGIN'">
+          Plugin icon preferred; falls back to HA entity icon.
+        </div>
+        <div class="form-text" v-else-if="iconSettings === 'PREFER_HA'">
+          HA entity icon preferred; falls back to plugin icon.
         </div>
       </div>
 
-      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">{{ controllerType }} actions</h6>
+      <!-- ── Actions ──────────────────────────────────────────────────────── -->
+      <p class="pi-section-header">{{ controllerType }} Actions</p>
 
-      <AccordeonComponent id="presses" class="mb-2">
-        <AccordeonItem accordeon-id="presses" item-id="shortPress" title="Short Press" :configured="!!serviceShortPress.serviceId">
+      <AccordeonComponent id="presses" class="mb-3">
+        <AccordeonItem
+          accordeon-id="presses"
+          item-id="shortPress"
+          title="Short Press"
+          :configured="!!serviceShortPress.serviceId"
+        >
           <ServiceCallConfiguration
             v-model="serviceShortPress"
             :available-entities="availableEntities"
             :available-services="availableServices"
-            class="mb-2"
           ></ServiceCallConfiguration>
         </AccordeonItem>
 
-        <AccordeonItem accordeon-id="presses" item-id="longPress" title="Long Press" :configured="!!serviceLongPress.serviceId">
+        <AccordeonItem
+          accordeon-id="presses"
+          item-id="longPress"
+          title="Long Press"
+          :configured="!!serviceLongPress.serviceId"
+        >
           <ServiceCallConfiguration
             v-model="serviceLongPress"
             :available-entities="availableEntities"
             :available-services="availableServices"
-            class="mb-2"
           ></ServiceCallConfiguration>
         </AccordeonItem>
 
         <template v-if="controllerType === 'Encoder'">
-          <AccordeonItem accordeon-id="presses" item-id="touch" title="Screen tap" :configured="!!serviceTap.serviceId">
+          <AccordeonItem
+            accordeon-id="presses"
+            item-id="touch"
+            title="Screen Tap"
+            :configured="!!serviceTap.serviceId"
+          >
             <ServiceCallConfiguration
               v-model="serviceTap"
               :available-entities="availableEntities"
               :available-services="availableServices"
-              class="mb-2"
             ></ServiceCallConfiguration>
           </AccordeonItem>
 
-          <AccordeonItem accordeon-id="presses" item-id="dialRotate" title="Rotation" :configured="!!serviceRotation.serviceId">
+          <AccordeonItem
+            accordeon-id="presses"
+            item-id="dialRotate"
+            title="Rotation"
+            :configured="!!serviceRotation.serviceId"
+          >
             <ServiceCallConfiguration
               v-model="serviceRotation"
               :available-entities="availableEntities"
               :available-services="availableServices"
             ></ServiceCallConfiguration>
 
-            <details class="mb-2">
+            <details class="pi-vars mt-2 mb-3">
               <summary>Available variables</summary>
-              <div class="form-text">
-                <span v-pre class="text-info font-monospace">{{ ticks }}</span> - The number of
-                ticks the dial was rotated (negative value for left turn, positive value for right
-                turn).
-              </div>
-              <div class="form-text">
-                <span v-pre class="text-info font-monospace">{{ rotationPercent }}</span> - A number
-                between 0 and 100 that represents the rotation percentage value of the dial.
-              </div>
-              <div class="form-text">
-                <span v-pre class="text-info font-monospace">{{ rotationAbsolute }}</span> - A
-                number between 0 and 255 that represents the absolute rotation value of the dial.
+              <div class="pi-vars-content">
+                <div class="form-text">
+                  <span v-pre class="text-info font-monospace">{{ ticks }}</span> — ticks rotated
+                  (negative = left, positive = right).
+                </div>
+                <div class="form-text">
+                  <span v-pre class="text-info font-monospace">{{ rotationPercent }}</span> — 0–100
+                  rotation percentage.
+                </div>
+                <div class="form-text">
+                  <span v-pre class="text-info font-monospace">{{ rotationAbsolute }}</span> — 0–255
+                  absolute rotation value.
+                </div>
               </div>
             </details>
 
-            <label class="form-label" for="rotationTickMultiplier"
-              >Dial rotation tick multiplier (x{{ rotationTickMultiplier }})</label
-            >
+            <label class="form-label" for="rotationTickMultiplier">
+              Tick multiplier
+              <span class="badge bg-secondary ms-1">×{{ rotationTickMultiplier }}</span>
+            </label>
             <input
               id="rotationTickMultiplier"
               v-model="rotationTickMultiplier"
@@ -298,14 +330,12 @@
               step="0.1"
               type="range"
             />
-            <div class="form-text mb-2">
-              Each tick of the dial will be multiplied with this value. This results in faster or
-              slower value changes.
-            </div>
+            <div class="form-text mb-3">Each dial tick is multiplied by this value.</div>
 
-            <label class="form-label" for="rotationTickBucketSizeMs"
-              >Dial rotation tick bucket size ({{ rotationTickBucketSizeMs }} ms)</label
-            >
+            <label class="form-label" for="rotationTickBucketSizeMs">
+              Tick bucket size
+              <span class="badge bg-secondary ms-1">{{ rotationTickBucketSizeMs }} ms</span>
+            </label>
             <input
               id="rotationTickBucketSizeMs"
               v-model="rotationTickBucketSizeMs"
@@ -316,16 +346,14 @@
               type="range"
             />
             <div class="form-text mb-2">
-              If greater than zero, ticks are aggregated for the given amount of milliseconds and
-              then passed to your service call. This results in less service calls. A value of zero
-              will result in a service call for each tick, which may cause trouble with home
-              assistant.
+              Aggregates ticks for this duration before firing the service call. Zero = one call per
+              tick.
             </div>
           </AccordeonItem>
         </template>
       </AccordeonComponent>
 
-      <button class="btn btn-sm btn-primary float-end" v-on:click="saveSettings">
+      <button class="btn btn-sm btn-primary w-100" type="button" v-on:click="saveSettings">
         Save configuration
       </button>
     </div>
