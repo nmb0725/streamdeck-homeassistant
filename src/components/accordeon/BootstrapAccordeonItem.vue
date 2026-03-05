@@ -10,6 +10,7 @@
         :aria-controls="'collapse' + itemId"
       >
         {{ title }}
+        <span v-if="configured" class="ms-2 text-success" style="font-size: 0.6rem">&#9679;</span>
       </button>
     </h2>
     <div
@@ -38,6 +39,10 @@ defineProps({
   title: {
     type: String,
     required: true
+  },
+  configured: {
+    type: Boolean,
+    default: false
   }
 })
 </script>

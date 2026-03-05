@@ -1,12 +1,18 @@
 <template>
   <div>
     <label class="form-label" for="entity">Entity</label>
+    <input
+      type="text"
+      class="form-control form-control-sm mb-1"
+      v-model="entityFilter"
+      placeholder="Filter by name or entity_id..."
+    />
     <select
       size="5"
       id="entity"
       @change="emit('update:modelValue', $event.target.value)"
       :value="modelValue"
-      class="form-select form-select-sm mb-1"
+      class="form-select form-select-sm"
     >
       <option
         v-for="entity in filteredEntities"
@@ -17,12 +23,6 @@
         {{ entity.title }}
       </option>
     </select>
-    <input
-      type="text"
-      class="form-control form-control-sm"
-      v-model="entityFilter"
-      placeholder="Filter by name or entity_id..."
-    />
   </div>
 </template>
 <script setup>

@@ -1,7 +1,17 @@
 <template>
   <div class="container-fluid">
-    <h1>Global Settings</h1>
-    <div class="clearfix mb-3">
+    <div v-if="!globalSettingsExpanded" class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge text-bg-success">Connected</span>
+        <small class="text-muted text-truncate" style="max-width: 180px">{{ serverUrl }}</small>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" type="button" @click="globalSettingsExpanded = true">
+        Edit
+      </button>
+    </div>
+
+    <div v-if="globalSettingsExpanded" class="clearfix mb-3">
+      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">Global Settings</h6>
       <div class="mb-3">
         <label class="form-label" for="serverUrl">Server URL</label>
         <input id="serverUrl" v-model="serverUrl" class="form-control form-control-sm" type="url" />
@@ -96,7 +106,7 @@
     <!-- ======================================================================================================= -->
 
     <div v-if="haConnectionState === 'connected'" class="clearfix mb-3">
-      <h1>{{ controllerType }} appearance</h1>
+      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">{{ controllerType }} appearance</h6>
 
       <EntitySelection
         class="mb-3"
@@ -221,10 +231,10 @@
         </div>
       </div>
 
-      <h1>{{ controllerType }} actions</h1>
+      <h6 class="text-uppercase fw-semibold text-muted mb-2 mt-2 small">{{ controllerType }} actions</h6>
 
       <AccordeonComponent id="presses" class="mb-2">
-        <AccordeonItem accordeon-id="presses" item-id="shortPress" title="Short Press">
+        <AccordeonItem accordeon-id="presses" item-id="shortPress" title="Short Press" :configured="!!serviceShortPress.serviceId">
           <ServiceCallConfiguration
             v-model="serviceShortPress"
             :available-entities="availableEntities"
@@ -233,7 +243,7 @@
           ></ServiceCallConfiguration>
         </AccordeonItem>
 
-        <AccordeonItem accordeon-id="presses" item-id="longPress" title="Long Press">
+        <AccordeonItem accordeon-id="presses" item-id="longPress" title="Long Press" :configured="!!serviceLongPress.serviceId">
           <ServiceCallConfiguration
             v-model="serviceLongPress"
             :available-entities="availableEntities"
@@ -243,7 +253,7 @@
         </AccordeonItem>
 
         <template v-if="controllerType === 'Encoder'">
-          <AccordeonItem accordeon-id="presses" item-id="touch" title="Screen tap">
+          <AccordeonItem accordeon-id="presses" item-id="touch" title="Screen tap" :configured="!!serviceTap.serviceId">
             <ServiceCallConfiguration
               v-model="serviceTap"
               :available-entities="availableEntities"
@@ -252,7 +262,7 @@
             ></ServiceCallConfiguration>
           </AccordeonItem>
 
-          <AccordeonItem accordeon-id="presses" item-id="dialRotate" title="Rotation">
+          <AccordeonItem accordeon-id="presses" item-id="dialRotate" title="Rotation" :configured="!!serviceRotation.serviceId">
             <ServiceCallConfiguration
               v-model="serviceRotation"
               :available-entities="availableEntities"
@@ -329,7 +339,7 @@ import { Settings } from '@/modules/common/settings'
 import { Homeassistant } from '@/modules/homeassistant/homeassistant'
 import { Entity } from '@/modules/pi/entity'
 import { Service } from '@/modules/pi/service'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ServiceCallConfiguration from '@/components/ServiceCallConfiguration.vue'
 import { ObjectUtils } from '@/modules/common/utils'
 import AccordeonComponent from '@/components/accordeon/BootstrapAccordeon.vue'
@@ -339,6 +349,8 @@ import axios from 'axios'
 import yaml from 'js-yaml'
 
 let manifest = ref(defaultManifest)
+
+const globalSettingsExpanded = ref(true)
 
 let $HA = null
 let $SD = null
@@ -446,6 +458,11 @@ function updateManifest() {
     .then((response) => (manifest.value = yaml.load(response.data)))
     .catch((error) => console.log(`Failed to download updated manifest.yml: ${error}`))
 }
+
+watch(haConnectionState, (state) => {
+  if (state === 'connected') globalSettingsExpanded.value = false
+  if (state === 'disconnected') globalSettingsExpanded.value = true
+})
 
 const isHaSettingsComplete = computed(() => {
   return serverUrl.value && accessToken.value
