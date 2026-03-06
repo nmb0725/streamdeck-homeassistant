@@ -45,8 +45,14 @@ export class Homeassistant {
     this._connection.sendMessagePromise({ type: 'get_services' }).then(callback)
   }
 
-  subscribeEvents(callback) {
-    this._connection.subscribeEvents(callback, 'state_changed')
+  subscribeEntitiesChanged(entityIds, callback) {
+    return this._connection.subscribeMessage(callback, {
+      type: 'subscribe_trigger',
+      trigger: {
+        platform: 'state',
+        entity_id: entityIds
+      }
+    })
   }
 
   callService(service, domain, entity_id = null, serviceData = null) {

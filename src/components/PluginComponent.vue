@@ -23,6 +23,7 @@ const $reconnectTimeout = ref({})
 const globalSettings = ref({})
 const actionSettings = ref([])
 const buttonLongpressTimeouts = ref(new Map()) //context, timeout
+let haEntitySubscription = null
 
 const activeStates = ref(defaultActiveStates)
 
@@ -65,12 +66,14 @@ onMounted(async () => {
       actionSettings.value[context] = Settings.parse(message.payload.settings)
       if ($HA.value) {
         $HA.value.getStatesDebounced(entityStatesChanged)
+        resubscribeEntities()
       }
     })
 
     $SD.value.on('willDisappear', (message) => {
       let context = message.context
       delete actionSettings.value[context]
+      resubscribeEntities()
     })
 
     $SD.value.on('dialRotate', (message) => {
@@ -126,6 +129,7 @@ onMounted(async () => {
       actionSettings.value[context] = Settings.parse(message.payload.settings)
       if ($HA.value) {
         $HA.value.getStatesDebounced(entityStatesChanged)
+        resubscribeEntities()
       }
     })
   }
@@ -165,10 +169,11 @@ function connectHomeAssistant() {
 
 const onHAConnected = () => {
   $HA.value.getStatesDebounced(entityStatesChanged)
-  $HA.value.subscribeEvents(entityStateChanged)
+  resubscribeEntities()
 }
 
 function onHAError(msg) {
+  haEntitySubscription = null
   showAlert()
   console.log(`Home Assistant connection error: ${msg}`)
   window.clearTimeout($reconnectTimeout)
@@ -176,10 +181,33 @@ function onHAError(msg) {
 }
 
 function onHAClosed(msg) {
+  haEntitySubscription = null
   showAlert()
   console.log(`Home Assistant connection closed, trying to reopen connection: ${msg}`)
   window.clearTimeout($reconnectTimeout)
   $reconnectTimeout.value = window.setTimeout(connectHomeAssistant, 5000)
+}
+
+function getConfiguredEntityIds() {
+  return [
+    ...new Set(
+      Object.values(actionSettings.value)
+        .map((s) => s.display.entityId)
+        .filter(Boolean)
+    )
+  ]
+}
+
+async function resubscribeEntities() {
+  if (!$HA.value) return
+  if (haEntitySubscription) {
+    haEntitySubscription()
+    haEntitySubscription = null
+  }
+  const entityIds = getConfiguredEntityIds()
+  if (entityIds.length > 0) {
+    haEntitySubscription = await $HA.value.subscribeEntitiesChanged(entityIds, entityStateChanged)
+  }
 }
 
 function showAlert() {
@@ -191,8 +219,8 @@ function entityStatesChanged(event) {
 }
 
 function entityStateChanged(event) {
-  if (event) {
-    let newState = event.data.new_state
+  const newState = event?.variables?.trigger?.to_state
+  if (newState) {
     updateState(newState)
   }
 }
