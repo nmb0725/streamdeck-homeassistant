@@ -97,7 +97,6 @@
           <div v-for="item in dataProperties" v-bind:key="item.name" class="form-text">
             <span class="text-info font-monospace">{{ item.name }}</span>
             <span class="text-warning font-monospace" v-if="item.info.required"> (required)</span>
-            — {{ item.info.description }}
             <template v-if="item.info.example">
               <br /><span class="text-muted">Example: <i>{{ item.info.example }}</i></span>
             </template>
