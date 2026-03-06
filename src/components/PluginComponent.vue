@@ -7,7 +7,7 @@ import { StreamDeck } from '@/modules/common/streamdeck'
 import { Homeassistant } from '@/modules/homeassistant/homeassistant'
 import { SvgUtils } from '@/modules/plugin/svgUtils'
 import nunjucks from 'nunjucks'
-import { Settings } from '@/modules/common/settings'
+import { Settings, GlobalSettings } from '@/modules/common/settings'
 import { onMounted, ref } from 'vue'
 import { EntityConfigFactory } from '@/modules/plugin/entityConfigFactoryNg'
 import defaultActiveStates from '../../public/config/active-states.yml'
@@ -36,10 +36,12 @@ onMounted(async () => {
 
     $SD.value.on('globalsettings', (inGlobalSettings) => {
       console.log('Got global settings.')
-      globalSettings.value = inGlobalSettings
+      const migratedSettings = GlobalSettings.migrate(inGlobalSettings)
+      $SD.value.saveGlobalSettings(migratedSettings)
+      globalSettings.value = migratedSettings
       entityConfigFactory = new EntityConfigFactory(
-        inGlobalSettings.displayConfiguration?.urlOverride ||
-          inGlobalSettings.displayConfiguration?.url
+        migratedSettings.displayConfiguration?.urlOverride ||
+          migratedSettings.displayConfiguration?.url
       )
       connectHomeAssistant()
     })

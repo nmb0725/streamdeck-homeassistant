@@ -123,3 +123,14 @@ export class Settings {
     }
   }
 }
+
+export class GlobalSettings {
+  static migrate(globalSettings) {
+    if (!globalSettings?.serverUrl) return globalSettings
+    globalSettings.serverUrl = globalSettings.serverUrl
+      .replace(/^ws:\/\//, 'http://')
+      .replace(/^wss:\/\//, 'https://')
+      .replace(/\/api\/websocket$/, '')
+    return globalSettings
+  }
+}

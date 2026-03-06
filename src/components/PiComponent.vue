@@ -24,10 +24,10 @@
         <label class="form-label" for="serverUrl">Server URL</label>
         <input id="serverUrl" v-model="serverUrl" class="form-control form-control-sm" type="url" />
         <div class="form-text">
-          <span class="text-body-secondary">Without SSL:</span> ws://localhost:8123/api/websocket
+          <span class="text-body-secondary">Without SSL:</span> http://localhost:8123
         </div>
         <div class="form-text">
-          <span class="text-body-secondary">With SSL:</span> wss://ha.mydomain.net:8123/api/websocket
+          <span class="text-body-secondary">With SSL:</span> https://ha.mydomain.net:8123
           <span class="text-muted">(requires a trusted certificate)</span>
         </div>
       </div>
@@ -371,7 +371,7 @@
 <script setup>
 import defaultManifest from '../../public/config/manifest.yml'
 import { StreamDeck } from '@/modules/common/streamdeck'
-import { Settings } from '@/modules/common/settings'
+import { Settings, GlobalSettings } from '@/modules/common/settings'
 import { Homeassistant } from '@/modules/homeassistant/homeassistant'
 import { Entity } from '@/modules/pi/entity'
 import { Service } from '@/modules/pi/service'
@@ -444,6 +444,7 @@ onMounted(() => {
 
     $SD.on('globalsettings', (globalSettings) => {
       if (globalSettings) {
+        GlobalSettings.migrate(globalSettings)
         serverUrl.value = globalSettings.serverUrl
         accessToken.value = globalSettings.accessToken
 

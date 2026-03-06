@@ -1,119 +1,56 @@
-import { ServiceAction } from '@/modules/homeassistant/actions/service-action'
-import { ExecuteScriptCommand } from '@/modules/homeassistant/commands/execute-script-command'
-import { SubscribeEventsCommand } from '@/modules/homeassistant/commands/subscribe-events-command'
-import { GetStatesCommand } from '@/modules/homeassistant/commands/get-states-command'
-import { GetServicesCommand } from '@/modules/homeassistant/commands/get-services-command'
+import { createConnection, createLongLivedTokenAuth, callService as haCallService } from 'home-assistant-js-websocket'
 
 export class Homeassistant {
   constructor(url, accessToken, onReady, onError, onClose) {
-    this.requests = new Map()
-    this.requestIdSequence = 1
-    this.websocket = new WebSocket(url)
-    this.accessToken = accessToken
-    this.onReady = onReady
-    this.onError = onError
+    this._connection = null
+    this._lastFullSync = null
+    this._closed = false
 
-    this.websocket.onmessage = (evt) => this.handleMessage(evt)
-    this.websocket.onerror = () => {
-      this.onError('Failed to connect to ' + url)
-    }
-    this.websocket.onclose = onClose
+    const auth = createLongLivedTokenAuth(url, accessToken)
+
+    createConnection({ auth })
+      .then((conn) => {
+        if (this._closed) {
+          conn.close()
+          return
+        }
+        this._connection = conn
+        conn.addEventListener('disconnected', () => onClose?.())
+        conn.addEventListener('reconnect-error', () => onError?.('Reconnection failed'))
+        onReady?.()
+      })
+      .catch((err) => {
+        if (!this._closed) onError?.(String(err))
+      })
   }
 
   close() {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      this.websocket.onclose = null
-      this.websocket.close()
-    }
-  }
-
-  handleMessage(msg) {
-    let messageData = JSON.parse(msg.data)
-
-    switch (messageData.type) {
-      case 'auth_required':
-        this.sendAuthentication()
-        break
-      case 'result':
-        if (!messageData.success) {
-          throw new Error(messageData.error.message)
-        }
-        if (this.requests.has(messageData.id)) {
-          this.requests.get(messageData.id)(messageData.result)
-        }
-        break
-      case 'event':
-        if (this.requests.has(messageData.id)) {
-          this.requests.get(messageData.id)(messageData.event)
-        }
-        break
-      case 'auth_ok':
-        if (this.onReady) {
-          this.onReady()
-        }
-        break
-      case 'auth_failed':
-        if (this.onError) {
-          this.onError(messageData.message)
-        }
-        break
-      case 'auth_invalid':
-        if (this.onError) {
-          this.onError(messageData.message)
-        }
-        break
-    }
-  }
-
-  sendAuthentication() {
-    let authMessage = {
-      type: 'auth',
-      access_token: this.accessToken
-    }
-
-    this.websocket.send(JSON.stringify(authMessage))
+    this._closed = true
+    this._connection?.close()
+    this._connection = null
   }
 
   getStatesDebounced(callback) {
-    if (!this.lastFullSync || Date.now() - this.lastFullSync > 2000) {
-      this.lastFullSync = Date.now()
+    if (!this._lastFullSync || Date.now() - this._lastFullSync > 2000) {
+      this._lastFullSync = Date.now()
       this.getStates(callback)
     }
   }
 
   getStates(callback) {
-    let getStatesCommand = new GetStatesCommand(this.nextRequestId())
-    this.sendCommand(getStatesCommand, callback)
+    this._connection.sendMessagePromise({ type: 'get_states' }).then(callback)
   }
 
   getServices(callback) {
-    let getServicesCommand = new GetServicesCommand(this.nextRequestId())
-    this.sendCommand(getServicesCommand, callback)
+    this._connection.sendMessagePromise({ type: 'get_services' }).then(callback)
   }
 
   subscribeEvents(callback) {
-    let subscribeEventCommand = new SubscribeEventsCommand(this.nextRequestId())
-    this.sendCommand(subscribeEventCommand, callback)
+    this._connection.subscribeEvents(callback, 'state_changed')
   }
 
-  callService(service, domain, entity_id = null, serviceData = null, callback = null) {
-    let executeScriptCmd = new ExecuteScriptCommand(this.nextRequestId(), [
-      new ServiceAction(domain, service, entity_id ? [entity_id] : null, serviceData || {})
-    ])
-    this.sendCommand(executeScriptCmd, callback)
-  }
-
-  sendCommand(command, callback) {
-    if (callback) {
-      this.requests.set(command.id, callback)
-    }
-
-    console.log(`Sending HomeAssistant command:\n ${JSON.stringify(command, null, 2)}`)
-    this.websocket.send(JSON.stringify(command))
-  }
-
-  nextRequestId() {
-    this.requestIdSequence = this.requestIdSequence + 1
-    return this.requestIdSequence
+  callService(service, domain, entity_id = null, serviceData = null) {
+    const target = entity_id ? { entity_id } : undefined
+    haCallService(this._connection, domain, service, serviceData ?? {}, target)
   }
 }
