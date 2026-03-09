@@ -21,7 +21,7 @@
           class="btn btn-outline-secondary"
           type="button"
           aria-label="Clear domain selection"
-          @click="(selectedDomain = '', clear('serviceId', 'entityId', 'serviceData'))"
+          @click="((selectedDomain = ''), clear('serviceId', 'entityId', 'serviceData'))"
         >
           ✕
         </button>
@@ -39,7 +39,7 @@
         >
           <option
             v-for="domainService in domainServices"
-            v-bind:key="domainService.serviceId"
+            :key="domainService.serviceId"
             :value="domainService.serviceId"
           >
             {{ domainService.name }}
@@ -59,8 +59,8 @@
     <div v-if="domainEntities.length > 0" class="mb-2">
       <EntitySelection
         :available-entities="domainEntities"
-        @change="update('entityId', $event.target.value)"
         :model-value="props.modelValue.entityId"
+        @change="update('entityId', $event.target.value)"
       ></EntitySelection>
       <button
         class="btn btn-sm btn-outline-secondary mt-1"
@@ -73,7 +73,8 @@
     </div>
 
     <template v-if="props.modelValue.serviceId">
-      <label class="form-label" for="serviceData">Service data JSON
+      <label class="form-label" for="serviceData"
+        >Service data JSON
         <span class="text-muted fw-normal">(optional)</span>
       </label>
       <textarea
@@ -87,18 +88,20 @@
         rows="5"
         @input="update('serviceData', $event.target.value)"
       ></textarea>
-      <div class="invalid-feedback" v-if="serviceDataInvalidFeedback">
+      <div v-if="serviceDataInvalidFeedback" class="invalid-feedback">
         {{ serviceDataInvalidFeedback }}
       </div>
 
-      <details class="pi-vars mt-1" v-if="dataProperties && dataProperties.length > 0">
+      <details v-if="dataProperties && dataProperties.length > 0" class="pi-vars mt-1">
         <summary>Available options</summary>
         <div class="pi-vars-content">
-          <div v-for="item in dataProperties" v-bind:key="item.name" class="form-text">
+          <div v-for="item in dataProperties" :key="item.name" class="form-text">
             <span class="text-info font-monospace">{{ item.name }}</span>
-            <span class="text-warning font-monospace" v-if="item.info.required"> (required)</span>
+            <span v-if="item.info.required" class="text-warning font-monospace"> (required)</span>
             <template v-if="item.info.example">
-              <br /><span class="text-muted">Example: <i>{{ item.info.example }}</i></span>
+              <br /><span class="text-muted"
+                >Example: <i>{{ item.info.example }}</i></span
+              >
             </template>
           </div>
         </div>
@@ -116,7 +119,6 @@ const titleSort = (s1, s2) => (s1.name.toLowerCase() > s2.name.toLowerCase() ? 1
 
 const props = defineProps({
   modelValue: {
-    required: true,
     type: Object,
     default: () => ({
       serviceId: null,
@@ -126,11 +128,11 @@ const props = defineProps({
   },
   availableServices: {
     required: true,
-    type: [] // Service[]
+    type: Array // Service[]
   },
   availableEntities: {
     required: true,
-    type: [] // Entity[]
+    type: Array // Entity[]
   }
 })
 

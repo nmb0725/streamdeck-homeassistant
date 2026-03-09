@@ -6,9 +6,9 @@
   "scripts": {
     "build": "vite build",
     "validate": "streamdeck validate --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
-    "build-dev": "vite build --watch --sourcemap inline --minify false",
+    "build-dev": "vite build --mode development --watch --sourcemap inline --minify false",
     "bundle": "streamdeck bundle --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix",
+    "lint": "eslint . --fix",
     "format": "prettier --write src/"
   },
   "dependencies": {
@@ -26,7 +26,6 @@
   "devDependencies": {
     "@elgato/cli": "^1.5.1",
     "@modyfi/vite-plugin-yaml": "^1.1.1",
-    "@rushstack/eslint-patch": "^1.14.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "eslint": "^9.39.1",

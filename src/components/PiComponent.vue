@@ -1,6 +1,5 @@
 <template>
   <div class="pi-root">
-
     <!-- ── Connection status bar (collapsed global settings) ──────────────── -->
     <div v-if="!globalSettingsExpanded" class="pi-connection-bar mb-3">
       <span class="pi-status-dot connected" aria-hidden="true"></span>
@@ -56,9 +55,9 @@
       <div class="mb-3">
         <label class="form-label" for="displayConfig">Display theme</label>
         <select
-          :disabled="displayConfigurationUrlOverride.length > 0"
           id="displayConfig"
           v-model="displayConfiguration"
+          :disabled="displayConfigurationUrlOverride.length > 0"
           class="form-select form-select-sm"
         >
           <option
@@ -91,14 +90,19 @@
 
       <div v-if="haError" class="alert alert-danger alert-dismissible py-2" role="alert">
         <span class="small">{{ haError }}</span>
-        <button class="btn-close btn-close-sm" type="button" aria-label="Dismiss" @click="haError = ''"></button>
+        <button
+          class="btn-close btn-close-sm"
+          type="button"
+          aria-label="Dismiss"
+          @click="haError = ''"
+        ></button>
       </div>
 
       <button
         :disabled="!isHaSettingsComplete || haConnectionState === 'connecting'"
         class="btn btn-sm btn-primary w-100"
         type="button"
-        v-on:click="saveGlobalSettings"
+        @click="saveGlobalSettings"
       >
         <span
           v-if="haConnectionState === 'connecting'"
@@ -123,9 +127,9 @@
       <p class="pi-section-header">{{ controllerType }} Appearance</p>
 
       <EntitySelection
+        v-model="entity"
         class="mb-3"
         :available-entities="availableEntities"
-        v-model="entity"
       ></EntitySelection>
 
       <!-- Custom title toggle -->
@@ -150,10 +154,10 @@
         <div class="form-text text-warning-emphasis">
           Clear the title in the main Stream Deck window for this template to take effect.
         </div>
-        <details class="pi-vars" v-if="entityAttributes.length">
+        <details v-if="entityAttributes.length" class="pi-vars">
           <summary>Available variables</summary>
           <div class="pi-vars-content">
-            <div v-for="attr in entityAttributes" v-bind:key="attr" class="form-text font-monospace">
+            <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
               {{ attr }}
             </div>
           </div>
@@ -179,10 +183,10 @@
           placeholder="Line 1 (may overlap with icon)"
           rows="4"
         ></textarea>
-        <details class="pi-vars" v-if="entityAttributes.length">
+        <details v-if="entityAttributes.length" class="pi-vars">
           <summary>Available variables</summary>
           <div class="pi-vars-content">
-            <div v-for="attr in entityAttributes" v-bind:key="attr" class="form-text font-monospace">
+            <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
               {{ attr }}
             </div>
           </div>
@@ -207,46 +211,46 @@
 
       <!-- Icon source segmented control -->
       <div class="mb-3 mt-3">
-        <label class="form-label d-block" id="iconSourceLabel">Icon source</label>
+        <label id="iconSourceLabel" class="form-label d-block">Icon source</label>
         <div
           class="btn-group w-100 pi-icon-btn-group"
           role="group"
           aria-labelledby="iconSourceLabel"
         >
           <input
+            id="radioPlugin"
+            v-model="iconSettings"
             type="radio"
             class="btn-check"
-            id="radioPlugin"
             value="PREFER_PLUGIN"
-            v-model="iconSettings"
             autocomplete="off"
           />
           <label class="btn btn-outline-secondary" for="radioPlugin">Plugin</label>
 
           <input
+            id="radioHomeAssistant"
+            v-model="iconSettings"
             type="radio"
             class="btn-check"
-            id="radioHomeAssistant"
             value="PREFER_HA"
-            v-model="iconSettings"
             autocomplete="off"
           />
           <label class="btn btn-outline-secondary" for="radioHomeAssistant">Home Assistant</label>
 
           <input
+            id="radioHide"
+            v-model="iconSettings"
             type="radio"
             class="btn-check"
-            id="radioHide"
             value="HIDE"
-            v-model="iconSettings"
             autocomplete="off"
           />
           <label class="btn btn-outline-secondary" for="radioHide">Hide</label>
         </div>
-        <div class="form-text" v-if="iconSettings === 'PREFER_PLUGIN'">
+        <div v-if="iconSettings === 'PREFER_PLUGIN'" class="form-text">
           Plugin icon preferred; falls back to HA entity icon.
         </div>
-        <div class="form-text" v-else-if="iconSettings === 'PREFER_HA'">
+        <div v-else-if="iconSettings === 'PREFER_HA'" class="form-text">
           HA entity icon preferred; falls back to plugin icon.
         </div>
       </div>
@@ -361,7 +365,7 @@
         </template>
       </AccordeonComponent>
 
-      <button class="btn btn-sm btn-primary w-100" type="button" v-on:click="saveSettings">
+      <button class="btn btn-sm btn-primary w-100" type="button" @click="saveSettings">
         Save configuration
       </button>
     </div>

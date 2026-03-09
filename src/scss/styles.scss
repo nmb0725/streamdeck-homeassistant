@@ -64,8 +64,13 @@ $body-bg-dark: #1a1a2e;
 }
 
 @keyframes pi-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
 
 // ── Available-Variables Disclosure ────────────────────────────────────────
@@ -88,7 +93,9 @@ details.pi-vars {
       transition: transform 0.15s ease;
     }
 
-    &:hover { color: var(--bs-body-color); }
+    &:hover {
+      color: var(--bs-body-color);
+    }
   }
 
   &[open] > summary::before {

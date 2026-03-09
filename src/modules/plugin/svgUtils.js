@@ -59,7 +59,9 @@ export class SvgUtils {
   }
 
   #toPascalCase(iconName) {
-    return 'mdi' + iconName.substring(4).replace(/(^\w|-\w)/g, (s) => s.replace(/-/, '').toUpperCase())
+    return (
+      'mdi' + iconName.substring(4).replace(/(^\w|-\w)/g, (s) => s.replace(/-/, '').toUpperCase())
+    )
   }
 
   #escapeXml(text) {

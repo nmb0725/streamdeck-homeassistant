@@ -2,24 +2,24 @@
   <div>
     <label class="form-label" for="entity">Entity</label>
     <input
+      v-model="entityFilter"
       type="search"
       class="form-control form-control-sm mb-1"
-      v-model="entityFilter"
       placeholder="Filter by name or entity ID…"
       aria-label="Filter entities"
       autocomplete="off"
       spellcheck="false"
     />
     <select
-      size="5"
       id="entity"
-      @change="emit('update:modelValue', $event.target.value)"
+      size="5"
       :value="modelValue"
       class="form-select form-select-sm"
+      @change="emit('update:modelValue', $event.target.value)"
     >
       <option
         v-for="entity in filteredEntities"
-        v-bind:key="entity"
+        :key="entity"
         :value="entity.entityId"
         :title="entity?.entityId"
       >
@@ -34,13 +34,12 @@ import { Entity } from '@/modules/pi/entity'
 
 const props = defineProps({
   modelValue: {
-    required: true,
     type: Object,
     default: () => new Entity()
   },
   availableEntities: {
     required: true,
-    type: [] // Entity[]
+    type: Array // Entity[]
   }
 })
 

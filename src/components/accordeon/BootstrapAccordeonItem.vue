@@ -1,6 +1,6 @@
 <template>
   <div class="accordion-item">
-    <h2 class="accordion-header" :id="itemId">
+    <h2 :id="itemId" class="accordion-header">
       <button
         class="accordion-button collapsed"
         type="button"
@@ -15,7 +15,8 @@
           class="badge bg-success ms-2"
           style="font-size: 0.6rem; padding: 0.2em 0.45em; vertical-align: middle"
           aria-label="Configured"
-        >&#10003;</span>
+          >&#10003;</span
+        >
       </button>
     </h2>
     <div

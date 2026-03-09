@@ -1,4 +1,8 @@
-import { createConnection, createLongLivedTokenAuth, callService as haCallService } from 'home-assistant-js-websocket'
+import {
+  createConnection,
+  createLongLivedTokenAuth,
+  callService as haCallService
+} from 'home-assistant-js-websocket'
 
 export class Homeassistant {
   constructor(url, accessToken, onReady, onError, onClose) {

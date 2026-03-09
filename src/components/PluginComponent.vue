@@ -270,7 +270,8 @@ function updateContextState(currentContext, domain, stateObject) {
 
   const showIndicators = contextSettings.display.enableServiceIndicator !== false // undefined = on by default
   renderingConfig.isAction = contextSettings.button.serviceShortPress.serviceId && showIndicators
-  renderingConfig.isMultiAction = contextSettings.button.serviceLongPress.serviceId && showIndicators
+  renderingConfig.isMultiAction =
+    contextSettings.button.serviceLongPress.serviceId && showIndicators
 
   if (renderingConfig.rotationPercent !== undefined) {
     rotationPercent[currentContext] = renderingConfig.rotationPercent
