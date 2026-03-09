@@ -1,6 +1,36 @@
 $body-bg-dark: #1a1a2e;
 
-@import 'bootstrap/scss/bootstrap';
+// ── Bootstrap – selective import (only modules actually used in the PI) ────
+// Configuration (required by all other partials)
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+// Base
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+
+// Components in use
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/transitions';
+@import 'bootstrap/scss/button-group';
+@import 'bootstrap/scss/accordion';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/close';
+@import 'bootstrap/scss/spinners';
+@import 'bootstrap/scss/nav';
+
+// Helpers (only text-truncate is used)
+@import 'bootstrap/scss/helpers/text-truncation';
+
+// Utilities API – generates spacing, flex, display, color, etc.
+@import 'bootstrap/scss/utilities/api';
 
 // ── PI Layout ──────────────────────────────────────────────────────────────
 .pi-root {
@@ -127,6 +157,24 @@ details.pi-vars {
     font-size: 0.75rem;
     padding: 0.25rem 0.4rem;
   }
+}
+
+// ── Tab Bar ────────────────────────────────────────────────────────────────
+.pi-tabs {
+  .nav-link {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
+.pi-tab-badge {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bs-success);
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
 // ── Form tweaks ────────────────────────────────────────────────────────────

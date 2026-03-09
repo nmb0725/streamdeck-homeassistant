@@ -122,178 +122,175 @@
       </button>
     </div>
 
-    <!-- ── Appearance ─────────────────────────────────────────────────────── -->
-    <div v-if="haConnectionState === 'connected' && !globalSettingsExpanded" class="mb-3">
-      <p class="pi-section-header">{{ controllerType }} Appearance</p>
+    <!-- ── Tab bar ────────────────────────────────────────────────────────── -->
+    <template v-if="haConnectionState === 'connected' && !globalSettingsExpanded">
+      <ul class="nav nav-tabs pi-tabs mb-3">
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            :class="{ active: activeTab === 'appearance' }"
+            type="button"
+            @click="activeTab = 'appearance'"
+          >
+            Appearance
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            :class="{ active: activeTab === 'actions' }"
+            type="button"
+            @click="activeTab = 'actions'"
+          >
+            Actions
+            <span v-if="anyActionConfigured" class="pi-tab-badge"></span>
+          </button>
+        </li>
+      </ul>
 
-      <EntitySelection
-        v-model="entity"
-        class="mb-3"
-        :available-entities="availableEntities"
-      ></EntitySelection>
+      <!-- ── Appearance pane ──────────────────────────────────────────────── -->
+      <div v-show="activeTab === 'appearance'">
+        <EntitySelection
+          v-model="entity"
+          class="mb-3"
+          :available-entities="availableEntities"
+        ></EntitySelection>
 
-      <!-- Custom title toggle -->
-      <div class="form-check form-switch mb-2">
-        <input
-          id="chkButtonTitle"
-          v-model="useCustomTitle"
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-        />
-        <label class="form-check-label" for="chkButtonTitle">Custom title</label>
-      </div>
-      <div v-if="useCustomTitle" class="mb-3 ps-1">
-        <input
-          id="buttonTitle"
-          v-model="buttonTitle"
-          class="form-control form-control-sm"
-          placeholder="{{friendly_name}}"
-          type="text"
-        />
-        <div class="form-text text-warning-emphasis">
-          Clear the title in the main Stream Deck window for this template to take effect.
-        </div>
-        <details v-if="entityAttributes.length" class="pi-vars">
-          <summary>Available variables</summary>
-          <div class="pi-vars-content">
-            <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
-              {{ attr }}
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Custom labels toggle -->
-      <div class="form-check form-switch mb-2">
-        <input
-          id="chkCustomLabels"
-          v-model="useCustomButtonLabels"
-          class="form-check-input"
-          type="checkbox"
-          role="switch"
-        />
-        <label class="form-check-label" for="chkCustomLabels">Custom labels</label>
-      </div>
-      <div v-if="useCustomButtonLabels" class="mb-3 ps-1">
-        <textarea
-          id="buttonLabels"
-          v-model="buttonLabels"
-          class="form-control form-control-sm font-monospace"
-          placeholder="Line 1 (may overlap with icon)"
-          rows="4"
-        ></textarea>
-        <details v-if="entityAttributes.length" class="pi-vars">
-          <summary>Available variables</summary>
-          <div class="pi-vars-content">
-            <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
-              {{ attr }}
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Service indicator (Keypad only) -->
-      <template v-if="controllerType !== 'Encoder'">
+        <!-- Custom title toggle -->
         <div class="form-check form-switch mb-2">
           <input
-            id="chkEnableServiceIndicator"
-            v-model="enableServiceIndicator"
+            id="chkButtonTitle"
+            v-model="useCustomTitle"
             class="form-check-input"
             type="checkbox"
             role="switch"
           />
-          <label class="form-check-label" for="chkEnableServiceIndicator">
-            Visual service indicators
-          </label>
+          <label class="form-check-label" for="chkButtonTitle">Custom title</label>
         </div>
-      </template>
-
-      <!-- Icon source segmented control -->
-      <div class="mb-3 mt-3">
-        <label id="iconSourceLabel" class="form-label d-block">Icon source</label>
-        <div
-          class="btn-group w-100 pi-icon-btn-group"
-          role="group"
-          aria-labelledby="iconSourceLabel"
-        >
+        <div v-if="useCustomTitle" class="mb-3 ps-1">
           <input
-            id="radioPlugin"
-            v-model="iconSettings"
-            type="radio"
-            class="btn-check"
-            value="PREFER_PLUGIN"
-            autocomplete="off"
+            id="buttonTitle"
+            v-model="buttonTitle"
+            class="form-control form-control-sm"
+            placeholder="{{friendly_name}}"
+            type="text"
           />
-          <label class="btn btn-outline-secondary" for="radioPlugin">Plugin</label>
-
-          <input
-            id="radioHomeAssistant"
-            v-model="iconSettings"
-            type="radio"
-            class="btn-check"
-            value="PREFER_HA"
-            autocomplete="off"
-          />
-          <label class="btn btn-outline-secondary" for="radioHomeAssistant">Home Assistant</label>
-
-          <input
-            id="radioHide"
-            v-model="iconSettings"
-            type="radio"
-            class="btn-check"
-            value="HIDE"
-            autocomplete="off"
-          />
-          <label class="btn btn-outline-secondary" for="radioHide">Hide</label>
+          <div class="form-text text-warning-emphasis">
+            Clear the title in the main Stream Deck window for this template to take effect.
+          </div>
+          <details v-if="entityAttributes.length" class="pi-vars">
+            <summary>Available variables</summary>
+            <div class="pi-vars-content">
+              <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
+                {{ attr }}
+              </div>
+            </div>
+          </details>
         </div>
-        <div v-if="iconSettings === 'PREFER_PLUGIN'" class="form-text">
-          Plugin icon preferred; falls back to HA entity icon.
+
+        <!-- Custom labels toggle -->
+        <div class="form-check form-switch mb-2">
+          <input
+            id="chkCustomLabels"
+            v-model="useCustomButtonLabels"
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+          />
+          <label class="form-check-label" for="chkCustomLabels">Custom labels</label>
         </div>
-        <div v-else-if="iconSettings === 'PREFER_HA'" class="form-text">
-          HA entity icon preferred; falls back to plugin icon.
+        <div v-if="useCustomButtonLabels" class="mb-3 ps-1">
+          <textarea
+            id="buttonLabels"
+            v-model="buttonLabels"
+            class="form-control form-control-sm font-monospace"
+            placeholder="Enter up to 4 lines. First two lines will overlap with the icon."
+            rows="4"
+          ></textarea>
+          <details v-if="entityAttributes.length" class="pi-vars">
+            <summary>Available variables</summary>
+            <div class="pi-vars-content">
+              <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
+                {{ attr }}
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- Service indicator (Keypad only) -->
+        <template v-if="controllerType !== 'Encoder'">
+          <div class="form-check form-switch mb-2">
+            <input
+              id="chkEnableServiceIndicator"
+              v-model="enableServiceIndicator"
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+            />
+            <label class="form-check-label" for="chkEnableServiceIndicator">
+              Visual service indicators
+            </label>
+          </div>
+        </template>
+
+        <!-- Icon source segmented control -->
+        <div class="mb-3 mt-3">
+          <label id="iconSourceLabel" class="form-label d-block">Icon source</label>
+          <div
+            class="btn-group w-100 pi-icon-btn-group"
+            role="group"
+            aria-labelledby="iconSourceLabel"
+          >
+            <input
+              id="radioPlugin"
+              v-model="iconSettings"
+              type="radio"
+              class="btn-check"
+              value="PREFER_PLUGIN"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-secondary" for="radioPlugin">Plugin</label>
+
+            <input
+              id="radioHomeAssistant"
+              v-model="iconSettings"
+              type="radio"
+              class="btn-check"
+              value="PREFER_HA"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-secondary" for="radioHomeAssistant">Home Assistant</label>
+
+            <input
+              id="radioHide"
+              v-model="iconSettings"
+              type="radio"
+              class="btn-check"
+              value="HIDE"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-secondary" for="radioHide">Hide</label>
+          </div>
+          <div v-if="iconSettings === 'PREFER_PLUGIN'" class="form-text">
+            Plugin icon preferred; falls back to HA entity icon.
+          </div>
+          <div v-else-if="iconSettings === 'PREFER_HA'" class="form-text">
+            HA entity icon preferred; falls back to plugin icon.
+          </div>
         </div>
       </div>
 
-      <!-- ── Actions ──────────────────────────────────────────────────────── -->
-      <p class="pi-section-header">{{ controllerType }} Actions</p>
-
-      <AccordeonComponent id="presses" class="mb-3">
-        <AccordeonItem
-          accordeon-id="presses"
-          item-id="shortPress"
-          title="Short Press"
-          :configured="!!serviceShortPress.serviceId"
-        >
-          <ServiceCallConfiguration
-            v-model="serviceShortPress"
-            :available-entities="availableEntities"
-            :available-services="availableServices"
-          ></ServiceCallConfiguration>
-        </AccordeonItem>
-
-        <AccordeonItem
-          accordeon-id="presses"
-          item-id="longPress"
-          title="Long Press"
-          :configured="!!serviceLongPress.serviceId"
-        >
-          <ServiceCallConfiguration
-            v-model="serviceLongPress"
-            :available-entities="availableEntities"
-            :available-services="availableServices"
-          ></ServiceCallConfiguration>
-        </AccordeonItem>
-
-        <template v-if="controllerType === 'Encoder'">
+      <!-- ── Actions pane ─────────────────────────────────────────────────── -->
+      <div v-show="activeTab === 'actions'">
+        <AccordeonComponent id="presses" class="mb-3">
           <AccordeonItem
             accordeon-id="presses"
-            item-id="touch"
-            title="Screen Tap"
-            :configured="!!serviceTap.serviceId"
+            item-id="shortPress"
+            title="Short Press"
+            :configured="!!serviceShortPress.serviceId"
           >
             <ServiceCallConfiguration
-              v-model="serviceTap"
+              v-model="serviceShortPress"
               :available-entities="availableEntities"
               :available-services="availableServices"
             ></ServiceCallConfiguration>
@@ -301,74 +298,103 @@
 
           <AccordeonItem
             accordeon-id="presses"
-            item-id="dialRotate"
-            title="Rotation"
-            :configured="!!serviceRotation.serviceId"
+            item-id="longPress"
+            title="Long Press"
+            :configured="!!serviceLongPress.serviceId"
           >
             <ServiceCallConfiguration
-              v-model="serviceRotation"
+              v-model="serviceLongPress"
               :available-entities="availableEntities"
               :available-services="availableServices"
             ></ServiceCallConfiguration>
+          </AccordeonItem>
 
-            <details class="pi-vars mt-2 mb-3">
-              <summary>Available variables</summary>
-              <div class="pi-vars-content">
-                <div class="form-text">
-                  <span v-pre class="text-info font-monospace">{{ ticks }}</span> — ticks rotated
-                  (negative = left, positive = right).
+          <template v-if="controllerType === 'Encoder'">
+            <AccordeonItem
+              accordeon-id="presses"
+              item-id="touch"
+              title="Screen Tap"
+              :configured="!!serviceTap.serviceId"
+            >
+              <ServiceCallConfiguration
+                v-model="serviceTap"
+                :available-entities="availableEntities"
+                :available-services="availableServices"
+              ></ServiceCallConfiguration>
+            </AccordeonItem>
+
+            <AccordeonItem
+              accordeon-id="presses"
+              item-id="dialRotate"
+              title="Rotation"
+              :configured="!!serviceRotation.serviceId"
+            >
+              <ServiceCallConfiguration
+                v-model="serviceRotation"
+                :available-entities="availableEntities"
+                :available-services="availableServices"
+              ></ServiceCallConfiguration>
+
+              <details class="pi-vars mt-2 mb-3">
+                <summary>Available variables</summary>
+                <div class="pi-vars-content">
+                  <div class="form-text">
+                    <span v-pre class="text-info font-monospace">{{ ticks }}</span> — ticks rotated
+                    (negative = left, positive = right).
+                  </div>
+                  <div class="form-text">
+                    <span v-pre class="text-info font-monospace">{{ rotationPercent }}</span> — 0–100
+                    rotation percentage.
+                  </div>
+                  <div class="form-text">
+                    <span v-pre class="text-info font-monospace">{{ rotationAbsolute }}</span> — 0–255
+                    absolute rotation value.
+                  </div>
                 </div>
-                <div class="form-text">
-                  <span v-pre class="text-info font-monospace">{{ rotationPercent }}</span> — 0–100
-                  rotation percentage.
-                </div>
-                <div class="form-text">
-                  <span v-pre class="text-info font-monospace">{{ rotationAbsolute }}</span> — 0–255
-                  absolute rotation value.
-                </div>
+              </details>
+
+              <label class="form-label" for="rotationTickMultiplier">
+                Tick multiplier
+                <span class="badge bg-secondary ms-1">×{{ rotationTickMultiplier }}</span>
+              </label>
+              <input
+                id="rotationTickMultiplier"
+                v-model="rotationTickMultiplier"
+                class="form-range"
+                max="10"
+                min="0.1"
+                step="0.1"
+                type="range"
+              />
+              <div class="form-text mb-3">Each dial tick is multiplied by this value.</div>
+
+              <label class="form-label" for="rotationTickBucketSizeMs">
+                Tick bucket size
+                <span class="badge bg-secondary ms-1">{{ rotationTickBucketSizeMs }} ms</span>
+              </label>
+              <input
+                id="rotationTickBucketSizeMs"
+                v-model="rotationTickBucketSizeMs"
+                class="form-range"
+                max="1000"
+                min="0"
+                step="50"
+                type="range"
+              />
+              <div class="form-text mb-2">
+                Aggregates ticks for this duration before firing the service call. Zero = one call per
+                tick.
               </div>
-            </details>
+            </AccordeonItem>
+          </template>
+        </AccordeonComponent>
+      </div>
 
-            <label class="form-label" for="rotationTickMultiplier">
-              Tick multiplier
-              <span class="badge bg-secondary ms-1">×{{ rotationTickMultiplier }}</span>
-            </label>
-            <input
-              id="rotationTickMultiplier"
-              v-model="rotationTickMultiplier"
-              class="form-range"
-              max="10"
-              min="0.1"
-              step="0.1"
-              type="range"
-            />
-            <div class="form-text mb-3">Each dial tick is multiplied by this value.</div>
-
-            <label class="form-label" for="rotationTickBucketSizeMs">
-              Tick bucket size
-              <span class="badge bg-secondary ms-1">{{ rotationTickBucketSizeMs }} ms</span>
-            </label>
-            <input
-              id="rotationTickBucketSizeMs"
-              v-model="rotationTickBucketSizeMs"
-              class="form-range"
-              max="1000"
-              min="0"
-              step="50"
-              type="range"
-            />
-            <div class="form-text mb-2">
-              Aggregates ticks for this duration before firing the service call. Zero = one call per
-              tick.
-            </div>
-          </AccordeonItem>
-        </template>
-      </AccordeonComponent>
-
-      <button class="btn btn-sm btn-primary w-100" type="button" @click="saveSettings">
+      <!-- ── Save button (always visible when connected) ──────────────────── -->
+      <button class="btn btn-sm btn-primary w-100 mt-2" type="button" @click="saveSettings">
         Save configuration
       </button>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -391,6 +417,7 @@ import yaml from 'js-yaml'
 let manifest = ref(defaultManifest)
 
 const globalSettingsExpanded = ref(true)
+const activeTab = ref('appearance')
 
 let $HA = null
 let $SD = null
@@ -508,6 +535,15 @@ watch(haConnectionState, (state) => {
 const isHaSettingsComplete = computed(() => {
   return serverUrl.value && accessToken.value
 })
+
+const anyActionConfigured = computed(() =>
+  !!(
+    serviceShortPress.value?.serviceId ||
+    serviceLongPress.value?.serviceId ||
+    serviceTap.value?.serviceId ||
+    serviceRotation.value?.serviceId
+  )
+)
 
 const entityAttributes = computed(() => {
   let currentEntityState = currentStates.value.find((state) => state.entityId === entity.value)
