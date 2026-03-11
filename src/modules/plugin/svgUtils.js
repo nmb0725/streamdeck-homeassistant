@@ -5,6 +5,10 @@ import { urlencode } from 'nunjucks/src/filters.js'
 const WIDTH = 288
 const HEIGHT = 288
 const FONT_SIZE = 48
+const MDI_VIEWBOX = 24
+const ICON_SCALE = Math.min(WIDTH / MDI_VIEWBOX, HEIGHT / 2 / MDI_VIEWBOX)
+const ICON_TX = (WIDTH - MDI_VIEWBOX * ICON_SCALE) / 2
+const ICON_TY = (HEIGHT / 2 - MDI_VIEWBOX * ICON_SCALE) / 2
 
 export class SvgUtils {
   renderButtonSVG(renderingConfig, stateObject) {
@@ -35,7 +39,7 @@ export class SvgUtils {
     const quarterHeight = HEIGHT / 4
 
     const iconSvg = iconPath
-      ? `<svg x="0" y="0" width="${WIDTH}" height="${HEIGHT / 2}" viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet"><path d="${iconPath}" fill="${iconColor ?? '#FFF'}"/></svg>`
+      ? `<g transform="translate(${ICON_TX}, ${ICON_TY}) scale(${ICON_SCALE})"><path d="${iconPath}" fill="${iconColor ?? '#FFF'}"/></g>`
       : ''
 
     const indicatorColor = isMultiAction ? '#3e89ff' : '#62ff65'
