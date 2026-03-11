@@ -607,7 +607,12 @@ function connectHomeAssistant() {
               return new Service(domain, serviceName, serviceData.fields, serviceData.target)
             })
           })
-          availableServiceDomains.value = Object.keys(services).sort()
+          availableServices.value.push(
+            new Service('streamdeck', 'open_url', {
+              url: { description: 'The URL to open (http, https, or any OS-registered protocol)', example: 'https://example.com' }
+            }, null)
+          )
+          availableServiceDomains.value = ['streamdeck', ...Object.keys(services).sort()]
         })
       },
       (message) => {

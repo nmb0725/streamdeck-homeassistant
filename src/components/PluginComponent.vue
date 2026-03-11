@@ -375,31 +375,43 @@ function buttonLongPress(context) {
 }
 
 function callService(context, serviceToCall, serviceDataAttributes = {}) {
-  if ($HA.value) {
-    if (serviceToCall['serviceId']) {
-      try {
-        const serviceIdParts = serviceToCall.serviceId.split('.')
+  if (!serviceToCall['serviceId']) return
 
-        let serviceData = null
-        if (serviceToCall.serviceData) {
-          let renderedServiceData = nunjucks.renderString(
-            serviceToCall.serviceData,
-            serviceDataAttributes
-          )
-          serviceData = JSON.parse(renderedServiceData)
-        }
+  try {
+    const serviceIdParts = serviceToCall.serviceId.split('.')
 
-        $HA.value.callService(
-          serviceIdParts[1],
-          serviceIdParts[0],
-          serviceToCall.entityId,
-          serviceData
-        )
-      } catch (e) {
-        console.error(e)
-        $SD.value.showAlert(context)
-      }
+    let serviceData = null
+    if (serviceToCall.serviceData) {
+      let renderedServiceData = nunjucks.renderString(
+        serviceToCall.serviceData,
+        serviceDataAttributes
+      )
+      serviceData = JSON.parse(renderedServiceData)
     }
+
+    if (serviceIdParts[0] === 'streamdeck') {
+      if (serviceIdParts[1] === 'open_url') {
+        const url = serviceData?.url
+        if (url) {
+          $SD.value.openUrl(url)
+        } else {
+          $SD.value.showAlert(context)
+        }
+      }
+      return
+    }
+
+    if ($HA.value) {
+      $HA.value.callService(
+        serviceIdParts[1],
+        serviceIdParts[0],
+        serviceToCall.entityId,
+        serviceData
+      )
+    }
+  } catch (e) {
+    console.error(e)
+    $SD.value.showAlert(context)
   }
 }
 </script>
