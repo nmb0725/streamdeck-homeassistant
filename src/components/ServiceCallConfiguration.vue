@@ -77,7 +77,11 @@
     <template v-if="props.modelValue.serviceId">
       <label class="pi-label" for="serviceData">
         Service data JSON
-        <span class="text-muted" style="font-weight: normal; text-transform: none; letter-spacing: 0">(optional)</span>
+        <span
+          class="text-muted"
+          style="font-weight: normal; text-transform: none; letter-spacing: 0"
+          >(optional)</span
+        >
       </label>
       <textarea
         id="serviceData"
@@ -99,9 +103,20 @@
         <div class="pi-vars-content">
           <div v-for="item in dataProperties" :key="item.name" class="pi-var-text">
             <span class="pi-var-item">{{ item.name }}</span>
+            <button
+              class="pi-btn pi-btn-icon pi-btn-ghost pi-btn-sm"
+              type="button"
+              :aria-label="`Add ${item.name} field`"
+              title="Add field to service data"
+              @click="addField(item.name, item.info)"
+            >
+              +
+            </button>
             <span v-if="item.info.required" class="text-warning"> (required)</span>
             <template v-if="item.info.example">
-              <br /><span class="text-muted">Example: <i>{{ item.info.example }}</i></span>
+              <br /><span class="text-muted"
+                >Example: <i>{{ item.info.example }}</i></span
+              >
             </template>
           </div>
         </div>
@@ -111,7 +126,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import nunjucks from 'nunjucks'
 import EntityPicker from '@/components/ui/EntityPicker.vue'
 
@@ -247,5 +262,39 @@ const dataProperties = computed(() => {
 
 function ensureArray(input) {
   return Array.isArray(input) ? input : [input]
+}
+
+function generateRequiredFieldsJson(service) {
+  if (!service?.dataFields) return null
+  const required = Object.entries(service.dataFields).filter(([, info]) => info.required)
+  if (required.length === 0) return null
+  const obj = {}
+  required.forEach(([name, info]) => {
+    obj[name] = info.example !== undefined ? info.example : null
+  })
+  return JSON.stringify(obj, null, 2)
+}
+
+watch(
+  () => props.modelValue.serviceId,
+  (newId) => {
+    if (!newId) return
+    const service = props.availableServices.find((s) => s.serviceId === newId)
+    const generated = generateRequiredFieldsJson(service)
+    if (generated) update('serviceData', generated)
+  }
+)
+
+function addField(fieldName, fieldInfo) {
+  let current = {}
+  try {
+    if (props.modelValue.serviceData) current = JSON.parse(props.modelValue.serviceData)
+  } catch {
+    /* ignore invalid JSON */
+  }
+  if (!(fieldName in current)) {
+    current[fieldName] = fieldInfo.example !== undefined ? fieldInfo.example : null
+  }
+  update('serviceData', JSON.stringify(current, null, 2))
 }
 </script>

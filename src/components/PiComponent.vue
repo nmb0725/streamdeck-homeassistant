@@ -43,7 +43,8 @@
             href="https://developers.home-assistant.io/docs/auth_api/#long-lived-access-token"
             target="_blank"
             rel="noopener"
-          >Documentation</a>
+            >Documentation</a
+          >
         </div>
       </div>
 
@@ -78,7 +79,8 @@
             target="_blank"
             rel="noopener"
             href="https://raw.githubusercontent.com/cgiesche/streamdeck-homeassistant/master/public/config/default-display-config.yml"
-          >Example</a>
+            >Example</a
+          >
         </div>
       </div>
 
@@ -95,7 +97,11 @@
         type="button"
         @click="saveGlobalSettings"
       >
-        <span v-if="haConnectionState === 'connecting'" class="pi-spinner" aria-hidden="true"></span>
+        <span
+          v-if="haConnectionState === 'connecting'"
+          class="pi-spinner"
+          aria-hidden="true"
+        ></span>
         {{ haConnectionState === 'connected' ? 'Save and reconnect' : 'Save and connect' }}
       </button>
       <button
@@ -133,17 +139,23 @@
       <!-- ── Appearance pane ──────────────────────────────────────────────── -->
       <div v-show="activeTab === 'appearance'">
         <label class="pi-label">Entity</label>
-        <EntityPicker
-          v-model="entity"
-          class="mb-3"
-          :available-entities="availableEntities"
-        />
+        <EntityPicker v-model="entity" class="mb-3" :available-entities="availableEntities" />
 
         <label class="pi-label mt-3">Appearance</label>
 
         <!-- Icon source segmented control -->
         <div class="mb-3">
-          <label class="pi-label" style="font-size:11px; color: var(--pi-text-muted); text-transform: none; font-weight: normal; letter-spacing: 0">Icon source</label>
+          <label
+            class="pi-label"
+            style="
+              font-size: 11px;
+              color: var(--pi-text-muted);
+              text-transform: none;
+              font-weight: normal;
+              letter-spacing: 0;
+            "
+            >Icon source</label
+          >
           <SegmentedControl
             v-model="iconSettings"
             control-id="iconSource"
@@ -218,7 +230,13 @@
         <ActionCard
           title="Short Press"
           :configured="!!serviceShortPress.serviceId"
-          :summary="serviceShortPress.serviceId ? (serviceShortPress.entityId ? serviceShortPress.serviceId + ' · ' + serviceShortPress.entityId : serviceShortPress.serviceId) : ''"
+          :summary="
+            serviceShortPress.serviceId
+              ? serviceShortPress.entityId
+                ? serviceShortPress.serviceId + ' · ' + serviceShortPress.entityId
+                : serviceShortPress.serviceId
+              : ''
+          "
         >
           <ServiceCallConfiguration
             v-model="serviceShortPress"
@@ -230,7 +248,13 @@
         <ActionCard
           title="Long Press"
           :configured="!!serviceLongPress.serviceId"
-          :summary="serviceLongPress.serviceId ? (serviceLongPress.entityId ? serviceLongPress.serviceId + ' · ' + serviceLongPress.entityId : serviceLongPress.serviceId) : ''"
+          :summary="
+            serviceLongPress.serviceId
+              ? serviceLongPress.entityId
+                ? serviceLongPress.serviceId + ' · ' + serviceLongPress.entityId
+                : serviceLongPress.serviceId
+              : ''
+          "
         >
           <ServiceCallConfiguration
             v-model="serviceLongPress"
@@ -243,7 +267,13 @@
           <ActionCard
             title="Screen Tap"
             :configured="!!serviceTap.serviceId"
-            :summary="serviceTap.serviceId ? (serviceTap.entityId ? serviceTap.serviceId + ' · ' + serviceTap.entityId : serviceTap.serviceId) : ''"
+            :summary="
+              serviceTap.serviceId
+                ? serviceTap.entityId
+                  ? serviceTap.serviceId + ' · ' + serviceTap.entityId
+                  : serviceTap.serviceId
+                : ''
+            "
           >
             <ServiceCallConfiguration
               v-model="serviceTap"
@@ -255,7 +285,13 @@
           <ActionCard
             title="Rotation"
             :configured="!!serviceRotation.serviceId"
-            :summary="serviceRotation.serviceId ? (serviceRotation.entityId ? serviceRotation.serviceId + ' · ' + serviceRotation.entityId : serviceRotation.serviceId) : ''"
+            :summary="
+              serviceRotation.serviceId
+                ? serviceRotation.entityId
+                  ? serviceRotation.serviceId + ' · ' + serviceRotation.entityId
+                  : serviceRotation.serviceId
+                : ''
+            "
           >
             <ServiceCallConfiguration
               v-model="serviceRotation"
@@ -267,16 +303,16 @@
               <summary>Available variables</summary>
               <div class="pi-vars-content">
                 <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ ticks }}</span> — ticks rotated
-                  (negative = left, positive = right).
+                  <span v-pre class="pi-var-item">{{ ticks }}</span> — ticks rotated (negative =
+                  left, positive = right).
                 </div>
                 <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ rotationPercent }}</span> — 0–100
-                  rotation percentage.
+                  <span v-pre class="pi-var-item">{{ rotationPercent }}</span> — 0–100 rotation
+                  percentage.
                 </div>
                 <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ rotationAbsolute }}</span> — 0–255
-                  absolute rotation value.
+                  <span v-pre class="pi-var-item">{{ rotationAbsolute }}</span> — 0–255 absolute
+                  rotation value.
                 </div>
               </div>
             </details>
@@ -464,13 +500,14 @@ const isHaSettingsComplete = computed(() => {
   return serverUrl.value && accessToken.value
 })
 
-const anyActionConfigured = computed(() =>
-  !!(
-    serviceShortPress.value?.serviceId ||
-    serviceLongPress.value?.serviceId ||
-    serviceTap.value?.serviceId ||
-    serviceRotation.value?.serviceId
-  )
+const anyActionConfigured = computed(
+  () =>
+    !!(
+      serviceShortPress.value?.serviceId ||
+      serviceLongPress.value?.serviceId ||
+      serviceTap.value?.serviceId ||
+      serviceRotation.value?.serviceId
+    )
 )
 
 const entityAttributes = computed(() => {
@@ -536,9 +573,18 @@ function connectHomeAssistant() {
             })
           })
           availableServices.value.push(
-            new Service('streamdeck', 'open_url', {
-              url: { description: 'The URL to open (http, https, or any OS-registered protocol)', example: 'https://example.com', required: true }
-            }, null)
+            new Service(
+              'streamdeck',
+              'open_url',
+              {
+                url: {
+                  description: 'The URL to open (http, https, or any OS-registered protocol)',
+                  example: 'https://example.com',
+                  required: true
+                }
+              },
+              null
+            )
           )
           availableServiceDomains.value = ['streamdeck', ...Object.keys(services).sort()]
         })

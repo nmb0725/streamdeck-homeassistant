@@ -44,10 +44,9 @@
         @click="select(entity.entityId)"
         @mouseenter="focusedIndex = index"
       >
-        <span
-          class="pi-entity-badge"
-          :style="{ background: domainColor(entity.domain) }"
-        >{{ entity.domain }}</span>
+        <span class="pi-entity-badge" :style="{ background: domainColor(entity.domain) }">{{
+          entity.domain
+        }}</span>
         <span class="pi-entity-name">{{ entity.title }}</span>
         <span class="pi-entity-id">{{ entity.entityId }}</span>
       </div>
@@ -63,18 +62,18 @@
 import { computed, ref, watch } from 'vue'
 
 const DOMAIN_COLORS = {
-  light:        '#d4a017',
-  switch:       '#2dd4bf',
-  sensor:       '#34d399',
-  cover:        '#a78bfa',
+  light: '#d4a017',
+  switch: '#2dd4bf',
+  sensor: '#34d399',
+  cover: '#a78bfa',
   media_player: '#f87171',
-  climate:      '#60a5fa',
-  binary_sensor:'#fb923c',
-  input_boolean:'#2dd4bf',
-  automation:   '#e879f9',
-  script:       '#a78bfa',
-  scene:        '#4ade80',
-  default:      '#6b7280'
+  climate: '#60a5fa',
+  binary_sensor: '#fb923c',
+  input_boolean: '#2dd4bf',
+  automation: '#e879f9',
+  script: '#a78bfa',
+  scene: '#4ade80',
+  default: '#6b7280'
 }
 
 const props = defineProps({
@@ -103,9 +102,7 @@ const filteredEntities = computed(() => {
   if (!filter.value) return props.availableEntities
   const lc = filter.value.toLowerCase()
   return props.availableEntities.filter(
-    (e) =>
-      e.entityId.toLowerCase().includes(lc) ||
-      e.title.toLowerCase().includes(lc)
+    (e) => e.entityId.toLowerCase().includes(lc) || e.title.toLowerCase().includes(lc)
   )
 })
 
