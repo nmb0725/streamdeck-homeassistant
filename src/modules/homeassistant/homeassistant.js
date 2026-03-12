@@ -1,8 +1,21 @@
 import {
   createConnection,
   createLongLivedTokenAuth,
-  callService as haCallService
+  callService as haCallService,
+  ERR_CANNOT_CONNECT,
+  ERR_INVALID_AUTH,
+  ERR_CONNECTION_LOST,
+  ERR_HASS_HOST_REQUIRED,
+  ERR_INVALID_HTTPS_TO_HTTP
 } from 'home-assistant-js-websocket'
+
+const HA_ERROR_MESSAGES = {
+  [ERR_CANNOT_CONNECT]: 'Cannot connect to Home Assistant. Check the server URL.',
+  [ERR_INVALID_AUTH]: 'Invalid access token.',
+  [ERR_CONNECTION_LOST]: 'Connection to Home Assistant lost.',
+  [ERR_HASS_HOST_REQUIRED]: 'Home Assistant host URL is required.',
+  [ERR_INVALID_HTTPS_TO_HTTP]: 'Cannot connect: server uses HTTP but a secure connection (HTTPS) is required.'
+}
 
 export class Homeassistant {
   constructor(url, accessToken, onReady, onError, onClose) {
@@ -12,19 +25,19 @@ export class Homeassistant {
 
     const auth = createLongLivedTokenAuth(url, accessToken)
 
-    createConnection({ auth })
+    createConnection({ auth, setupRetry: 3 })
       .then((conn) => {
         if (this._closed) {
           conn.close()
           return
         }
         this._connection = conn
-        conn.addEventListener('disconnected', () => onClose?.())
+        conn.addEventListener('disconnected', () => !this._closed && onClose?.())
         conn.addEventListener('reconnect-error', () => onError?.('Reconnection failed'))
         onReady?.()
       })
       .catch((err) => {
-        if (!this._closed) onError?.(String(err))
+        if (!this._closed) onError?.(HA_ERROR_MESSAGES[err] ?? `Connection error (${err})`)
       })
   }
 
