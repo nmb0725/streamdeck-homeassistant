@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="mb-2">
-      <label class="form-label" for="domain">Domain</label>
-      <div class="input-group input-group-sm">
+      <label class="pi-label" for="domain">Domain</label>
+      <div class="pi-input-row">
         <select
           id="domain"
           v-model="selectedDomain"
-          class="form-select form-select-sm"
+          class="pi-select"
           @change="(update('serviceId', null), update('entityId', null))"
         >
           <option
@@ -18,7 +18,7 @@
           </option>
         </select>
         <button
-          class="btn btn-outline-secondary"
+          class="pi-btn pi-btn-ghost pi-btn-sm"
           type="button"
           aria-label="Clear domain selection"
           @click="((selectedDomain = ''), clear('serviceId', 'entityId', 'serviceData'))"
@@ -29,12 +29,12 @@
     </div>
 
     <div v-if="selectedDomain" class="mb-2">
-      <label class="form-label" for="service">Service</label>
-      <div class="input-group input-group-sm">
+      <label class="pi-label" for="service">Service</label>
+      <div class="pi-input-row">
         <select
           id="service"
           :value="modelValue.serviceId"
-          class="form-select form-select-sm"
+          class="pi-select"
           @change="update('serviceId', $event.target.value)"
         >
           <option
@@ -46,7 +46,7 @@
           </option>
         </select>
         <button
-          class="btn btn-outline-secondary"
+          class="pi-btn pi-btn-ghost pi-btn-sm"
           type="button"
           aria-label="Clear service selection"
           @click="clear('serviceId', 'entityId', 'serviceData')"
@@ -57,13 +57,15 @@
     </div>
 
     <div v-if="domainEntities.length > 0" class="mb-2">
-      <EntitySelection
+      <label class="pi-label">Entity</label>
+      <EntityPicker
         :available-entities="domainEntities"
         :model-value="props.modelValue.entityId"
-        @change="update('entityId', $event.target.value)"
-      ></EntitySelection>
+        :compact="true"
+        @update:model-value="update('entityId', $event)"
+      />
       <button
-        class="btn btn-sm btn-outline-secondary mt-1"
+        class="pi-btn pi-btn-ghost pi-btn-sm mt-1"
         type="button"
         aria-label="Clear entity selection"
         @click="clear('entityId')"
@@ -73,35 +75,33 @@
     </div>
 
     <template v-if="props.modelValue.serviceId">
-      <label class="form-label" for="serviceData"
-        >Service data JSON
-        <span class="text-muted fw-normal">(optional)</span>
+      <label class="pi-label" for="serviceData">
+        Service data JSON
+        <span class="text-muted" style="font-weight: normal; text-transform: none; letter-spacing: 0">(optional)</span>
       </label>
       <textarea
         id="serviceData"
         :class="{ 'is-invalid': serviceDataInvalidFeedback }"
         :value="props.modelValue.serviceData"
-        class="form-control form-control-sm font-monospace"
+        class="pi-textarea"
         placeholder='{
   "option": "value"
 }'
         rows="5"
         @input="update('serviceData', $event.target.value)"
       ></textarea>
-      <div v-if="serviceDataInvalidFeedback" class="invalid-feedback">
+      <div v-if="serviceDataInvalidFeedback" class="pi-invalid-feedback">
         {{ serviceDataInvalidFeedback }}
       </div>
 
       <details v-if="dataProperties && dataProperties.length > 0" class="pi-vars mt-1">
         <summary>Available options</summary>
         <div class="pi-vars-content">
-          <div v-for="item in dataProperties" :key="item.name" class="form-text">
-            <span class="text-info font-monospace">{{ item.name }}</span>
-            <span v-if="item.info.required" class="text-warning font-monospace"> (required)</span>
+          <div v-for="item in dataProperties" :key="item.name" class="pi-var-text">
+            <span class="pi-var-item">{{ item.name }}</span>
+            <span v-if="item.info.required" class="text-warning"> (required)</span>
             <template v-if="item.info.example">
-              <br /><span class="text-muted"
-                >Example: <i>{{ item.info.example }}</i></span
-              >
+              <br /><span class="text-muted">Example: <i>{{ item.info.example }}</i></span>
             </template>
           </div>
         </div>
@@ -113,7 +113,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import nunjucks from 'nunjucks'
-import EntitySelection from '@/components/EntitySelection.vue'
+import EntityPicker from '@/components/ui/EntityPicker.vue'
 
 const titleSort = (s1, s2) => (s1.name.toLowerCase() > s2.name.toLowerCase() ? 1 : -1)
 

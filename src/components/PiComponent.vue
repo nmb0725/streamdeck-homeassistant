@@ -1,17 +1,16 @@
 <template>
   <div class="pi-root">
     <!-- ── Connection status bar (collapsed global settings) ──────────────── -->
-    <div v-if="!globalSettingsExpanded" class="pi-connection-bar mb-3">
+    <div v-if="!globalSettingsExpanded" class="pi-connection-bar">
       <span class="pi-status-dot connected" aria-hidden="true"></span>
-      <span class="text-truncate flex-grow-1 small text-muted">Connection: {{ serverUrl }}</span>
+      <span class="pi-connection-url">{{ serverUrl }}</span>
       <button
-        class="btn btn-sm btn-outline-secondary py-0 px-2 ms-1 flex-shrink-0"
-        style="font-size: 0.7rem"
+        class="pi-btn-icon"
         type="button"
         aria-label="Edit global settings"
         @click="globalSettingsExpanded = true"
       >
-        Edit
+        ⚙
       </button>
     </div>
 
@@ -20,45 +19,41 @@
       <p class="pi-section-header mt-0">Global Settings</p>
 
       <div class="mb-3">
-        <label class="form-label" for="serverUrl">Server URL</label>
-        <input id="serverUrl" v-model="serverUrl" class="form-control form-control-sm" type="url" />
-        <div class="form-text">
-          <span class="text-body-secondary">Without SSL:</span> http://localhost:8123
-        </div>
-        <div class="form-text">
-          <span class="text-body-secondary">With SSL:</span> https://ha.mydomain.net:8123
-          <span class="text-muted">(requires a trusted certificate)</span>
+        <label class="pi-label" for="serverUrl">Server URL</label>
+        <input id="serverUrl" v-model="serverUrl" class="pi-input" type="url" />
+        <div class="pi-hint">
+          Without SSL: http://localhost:8123<br />
+          With SSL: https://ha.mydomain.net:8123
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="accessToken">Access Token</label>
+        <label class="pi-label" for="accessToken">Access Token</label>
         <input
           id="accessToken"
           v-model="accessToken"
-          class="form-control form-control-sm"
+          class="pi-input"
           required
           type="password"
           autocomplete="current-password"
         />
-        <div class="form-text">
+        <div class="pi-hint">
           Create a long-lived token under your HA profile page.
           <a
             href="https://developers.home-assistant.io/docs/auth_api/#long-lived-access-token"
             target="_blank"
             rel="noopener"
-            >Documentation</a
-          >
+          >Documentation</a>
         </div>
       </div>
 
       <div class="mb-3">
-        <label class="form-label" for="displayConfig">Display theme</label>
+        <label class="pi-label" for="displayConfig">Display theme</label>
         <select
           id="displayConfig"
           v-model="displayConfiguration"
           :disabled="displayConfigurationUrlOverride.length > 0"
-          class="form-select form-select-sm"
+          class="pi-select"
         >
           <option
             v-for="availableConfiguration in manifest['display-configs']"
@@ -69,52 +64,43 @@
           </option>
         </select>
 
-        <label for="displayConfigUrlOverride" class="form-label mt-2">Custom theme URL</label>
+        <label for="displayConfigUrlOverride" class="pi-label mt-2">Custom theme URL</label>
         <input
           id="displayConfigUrlOverride"
           v-model="displayConfigurationUrlOverride"
-          class="form-control form-control-sm"
+          class="pi-input"
           type="url"
           placeholder="file://c:/custom.yml"
         />
-        <div class="form-text">
+        <div class="pi-hint">
           Override with a custom YAML config.
           <a
             target="_blank"
             rel="noopener"
             href="https://raw.githubusercontent.com/cgiesche/streamdeck-homeassistant/master/public/config/default-display-config.yml"
-            >Example</a
-          >
+          >Example</a>
         </div>
       </div>
 
-      <div v-if="haError" class="alert alert-danger alert-dismissible py-2" role="alert">
-        <span class="small">{{ haError }}</span>
-        <button
-          class="btn-close btn-close-sm"
-          type="button"
-          aria-label="Dismiss"
-          @click="haError = ''"
-        ></button>
+      <div v-if="haError" class="pi-alert pi-alert-danger" role="alert">
+        <span style="flex: 1; font-size: 12px">{{ haError }}</span>
+        <button class="pi-alert-dismiss" type="button" aria-label="Dismiss" @click="haError = ''">
+          ✕
+        </button>
       </div>
 
       <button
         :disabled="!isHaSettingsComplete || haConnectionState === 'connecting'"
-        class="btn btn-sm btn-primary w-100"
+        class="pi-btn pi-btn-primary pi-btn-block"
         type="button"
         @click="saveGlobalSettings"
       >
-        <span
-          v-if="haConnectionState === 'connecting'"
-          aria-hidden="true"
-          class="spinner-border spinner-border-sm me-1"
-          role="status"
-        ></span>
+        <span v-if="haConnectionState === 'connecting'" class="pi-spinner" aria-hidden="true"></span>
         {{ haConnectionState === 'connected' ? 'Save and reconnect' : 'Save and connect' }}
       </button>
       <button
         v-if="haConnectionState === 'connected'"
-        class="btn btn-sm btn-outline-secondary w-100 mt-2"
+        class="pi-btn pi-btn-ghost pi-btn-block mt-2"
         type="button"
         @click="globalSettingsExpanded = false"
       >
@@ -122,276 +108,217 @@
       </button>
     </div>
 
-    <!-- ── Tab bar ────────────────────────────────────────────────────────── -->
+    <!-- ── Tab bar + content ──────────────────────────────────────────────── -->
     <template v-if="haConnectionState === 'connected' && !globalSettingsExpanded">
-      <ul class="nav nav-tabs pi-tabs mb-3">
-        <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'appearance' }"
-            type="button"
-            @click="activeTab = 'appearance'"
-          >
-            Appearance
-          </button>
-        </li>
-        <li class="nav-item">
-          <button
-            class="nav-link"
-            :class="{ active: activeTab === 'actions' }"
-            type="button"
-            @click="activeTab = 'actions'"
-          >
-            Actions
-            <span v-if="anyActionConfigured" class="pi-tab-badge"></span>
-          </button>
-        </li>
-      </ul>
+      <div class="pi-tabs">
+        <button
+          class="pi-tab"
+          :class="{ active: activeTab === 'appearance' }"
+          type="button"
+          @click="activeTab = 'appearance'"
+        >
+          Appearance
+        </button>
+        <button
+          class="pi-tab"
+          :class="{ active: activeTab === 'actions' }"
+          type="button"
+          @click="activeTab = 'actions'"
+        >
+          Actions
+          <span v-if="anyActionConfigured" class="pi-tab-badge"></span>
+        </button>
+      </div>
 
       <!-- ── Appearance pane ──────────────────────────────────────────────── -->
       <div v-show="activeTab === 'appearance'">
-        <EntitySelection
+        <label class="pi-label">Entity</label>
+        <EntityPicker
           v-model="entity"
           class="mb-3"
           :available-entities="availableEntities"
-        ></EntitySelection>
+        />
+
+        <label class="pi-label mt-3">Appearance</label>
+
+        <!-- Icon source segmented control -->
+        <div class="mb-3">
+          <label class="pi-label" style="font-size:11px; color: var(--pi-text-muted); text-transform: none; font-weight: normal; letter-spacing: 0">Icon source</label>
+          <SegmentedControl
+            v-model="iconSettings"
+            control-id="iconSource"
+            :options="[
+              { value: 'PREFER_PLUGIN', label: 'Plugin' },
+              { value: 'PREFER_HA', label: 'Home Assistant' },
+              { value: 'HIDE', label: 'Hide' }
+            ]"
+          />
+          <div v-if="iconSettings === 'PREFER_PLUGIN'" class="pi-seg-hint">
+            Plugin icon preferred; falls back to HA entity icon.
+          </div>
+          <div v-else-if="iconSettings === 'PREFER_HA'" class="pi-seg-hint">
+            HA entity icon preferred; falls back to plugin icon.
+          </div>
+        </div>
+
+        <!-- Service indicator (Keypad only) -->
+        <template v-if="controllerType !== 'Encoder'">
+          <PiToggleRow
+            id="chkEnableServiceIndicator"
+            v-model="enableServiceIndicator"
+            label="Visual service indicators"
+            class="mb-2"
+          />
+        </template>
 
         <!-- Custom title toggle -->
-        <div class="form-check form-switch mb-2">
-          <input
-            id="chkButtonTitle"
-            v-model="useCustomTitle"
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-          />
-          <label class="form-check-label" for="chkButtonTitle">Custom title</label>
-        </div>
-        <div v-if="useCustomTitle" class="mb-3 ps-1">
+        <PiToggleRow id="chkButtonTitle" v-model="useCustomTitle" label="Custom title">
           <input
             id="buttonTitle"
             v-model="buttonTitle"
-            class="form-control form-control-sm"
+            class="pi-input mb-1"
             placeholder="{{friendly_name}}"
             type="text"
           />
-          <div class="form-text text-warning-emphasis">
+          <div class="pi-hint" style="color: var(--pi-warning)">
             Clear the title in the main Stream Deck window for this template to take effect.
           </div>
           <details v-if="entityAttributes.length" class="pi-vars">
             <summary>Available variables</summary>
             <div class="pi-vars-content">
-              <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
+              <div v-for="attr in entityAttributes" :key="attr" class="pi-var-item">
                 {{ attr }}
               </div>
             </div>
           </details>
-        </div>
+        </PiToggleRow>
 
         <!-- Custom labels toggle -->
-        <div class="form-check form-switch mb-2">
-          <input
-            id="chkCustomLabels"
-            v-model="useCustomButtonLabels"
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-          />
-          <label class="form-check-label" for="chkCustomLabels">Custom labels</label>
-        </div>
-        <div v-if="useCustomButtonLabels" class="mb-3 ps-1">
+        <PiToggleRow id="chkCustomLabels" v-model="useCustomButtonLabels" label="Custom labels">
           <textarea
             id="buttonLabels"
             v-model="buttonLabels"
-            class="form-control form-control-sm font-monospace"
+            class="pi-textarea mb-1"
             placeholder="Enter up to 4 lines. First two lines will overlap with the icon."
             rows="4"
           ></textarea>
           <details v-if="entityAttributes.length" class="pi-vars">
             <summary>Available variables</summary>
             <div class="pi-vars-content">
-              <div v-for="attr in entityAttributes" :key="attr" class="form-text font-monospace">
+              <div v-for="attr in entityAttributes" :key="attr" class="pi-var-item">
                 {{ attr }}
               </div>
             </div>
           </details>
-        </div>
-
-        <!-- Service indicator (Keypad only) -->
-        <template v-if="controllerType !== 'Encoder'">
-          <div class="form-check form-switch mb-2">
-            <input
-              id="chkEnableServiceIndicator"
-              v-model="enableServiceIndicator"
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
-            />
-            <label class="form-check-label" for="chkEnableServiceIndicator">
-              Visual service indicators
-            </label>
-          </div>
-        </template>
-
-        <!-- Icon source segmented control -->
-        <div class="mb-3 mt-3">
-          <label id="iconSourceLabel" class="form-label d-block">Icon source</label>
-          <div
-            class="btn-group w-100 pi-icon-btn-group"
-            role="group"
-            aria-labelledby="iconSourceLabel"
-          >
-            <input
-              id="radioPlugin"
-              v-model="iconSettings"
-              type="radio"
-              class="btn-check"
-              value="PREFER_PLUGIN"
-              autocomplete="off"
-            />
-            <label class="btn btn-outline-secondary" for="radioPlugin">Plugin</label>
-
-            <input
-              id="radioHomeAssistant"
-              v-model="iconSettings"
-              type="radio"
-              class="btn-check"
-              value="PREFER_HA"
-              autocomplete="off"
-            />
-            <label class="btn btn-outline-secondary" for="radioHomeAssistant">Home Assistant</label>
-
-            <input
-              id="radioHide"
-              v-model="iconSettings"
-              type="radio"
-              class="btn-check"
-              value="HIDE"
-              autocomplete="off"
-            />
-            <label class="btn btn-outline-secondary" for="radioHide">Hide</label>
-          </div>
-          <div v-if="iconSettings === 'PREFER_PLUGIN'" class="form-text">
-            Plugin icon preferred; falls back to HA entity icon.
-          </div>
-          <div v-else-if="iconSettings === 'PREFER_HA'" class="form-text">
-            HA entity icon preferred; falls back to plugin icon.
-          </div>
-        </div>
+        </PiToggleRow>
       </div>
 
       <!-- ── Actions pane ─────────────────────────────────────────────────── -->
       <div v-show="activeTab === 'actions'">
-        <AccordeonComponent id="presses" class="mb-3">
-          <AccordeonItem
-            accordeon-id="presses"
-            item-id="shortPress"
-            title="Short Press"
-            :configured="!!serviceShortPress.serviceId"
+        <ActionCard
+          title="Short Press"
+          :configured="!!serviceShortPress.serviceId"
+          :summary="serviceShortPress.serviceId ? (serviceShortPress.entityId ? serviceShortPress.serviceId + ' · ' + serviceShortPress.entityId : serviceShortPress.serviceId) : ''"
+        >
+          <ServiceCallConfiguration
+            v-model="serviceShortPress"
+            :available-entities="availableEntities"
+            :available-services="availableServices"
+          />
+        </ActionCard>
+
+        <ActionCard
+          title="Long Press"
+          :configured="!!serviceLongPress.serviceId"
+          :summary="serviceLongPress.serviceId ? (serviceLongPress.entityId ? serviceLongPress.serviceId + ' · ' + serviceLongPress.entityId : serviceLongPress.serviceId) : ''"
+        >
+          <ServiceCallConfiguration
+            v-model="serviceLongPress"
+            :available-entities="availableEntities"
+            :available-services="availableServices"
+          />
+        </ActionCard>
+
+        <template v-if="controllerType === 'Encoder'">
+          <ActionCard
+            title="Screen Tap"
+            :configured="!!serviceTap.serviceId"
+            :summary="serviceTap.serviceId ? (serviceTap.entityId ? serviceTap.serviceId + ' · ' + serviceTap.entityId : serviceTap.serviceId) : ''"
           >
             <ServiceCallConfiguration
-              v-model="serviceShortPress"
+              v-model="serviceTap"
               :available-entities="availableEntities"
               :available-services="availableServices"
-            ></ServiceCallConfiguration>
-          </AccordeonItem>
+            />
+          </ActionCard>
 
-          <AccordeonItem
-            accordeon-id="presses"
-            item-id="longPress"
-            title="Long Press"
-            :configured="!!serviceLongPress.serviceId"
+          <ActionCard
+            title="Rotation"
+            :configured="!!serviceRotation.serviceId"
+            :summary="serviceRotation.serviceId ? (serviceRotation.entityId ? serviceRotation.serviceId + ' · ' + serviceRotation.entityId : serviceRotation.serviceId) : ''"
           >
             <ServiceCallConfiguration
-              v-model="serviceLongPress"
+              v-model="serviceRotation"
               :available-entities="availableEntities"
               :available-services="availableServices"
-            ></ServiceCallConfiguration>
-          </AccordeonItem>
+            />
 
-          <template v-if="controllerType === 'Encoder'">
-            <AccordeonItem
-              accordeon-id="presses"
-              item-id="touch"
-              title="Screen Tap"
-              :configured="!!serviceTap.serviceId"
-            >
-              <ServiceCallConfiguration
-                v-model="serviceTap"
-                :available-entities="availableEntities"
-                :available-services="availableServices"
-              ></ServiceCallConfiguration>
-            </AccordeonItem>
-
-            <AccordeonItem
-              accordeon-id="presses"
-              item-id="dialRotate"
-              title="Rotation"
-              :configured="!!serviceRotation.serviceId"
-            >
-              <ServiceCallConfiguration
-                v-model="serviceRotation"
-                :available-entities="availableEntities"
-                :available-services="availableServices"
-              ></ServiceCallConfiguration>
-
-              <details class="pi-vars mt-2 mb-3">
-                <summary>Available variables</summary>
-                <div class="pi-vars-content">
-                  <div class="form-text">
-                    <span v-pre class="text-info font-monospace">{{ ticks }}</span> — ticks rotated
-                    (negative = left, positive = right).
-                  </div>
-                  <div class="form-text">
-                    <span v-pre class="text-info font-monospace">{{ rotationPercent }}</span> — 0–100
-                    rotation percentage.
-                  </div>
-                  <div class="form-text">
-                    <span v-pre class="text-info font-monospace">{{ rotationAbsolute }}</span> — 0–255
-                    absolute rotation value.
-                  </div>
+            <details class="pi-vars mt-2 mb-3">
+              <summary>Available variables</summary>
+              <div class="pi-vars-content">
+                <div class="pi-var-text">
+                  <span v-pre class="pi-var-item">{{ ticks }}</span> — ticks rotated
+                  (negative = left, positive = right).
                 </div>
-              </details>
-
-              <label class="form-label" for="rotationTickMultiplier">
-                Tick multiplier
-                <span class="badge bg-secondary ms-1">×{{ rotationTickMultiplier }}</span>
-              </label>
-              <input
-                id="rotationTickMultiplier"
-                v-model="rotationTickMultiplier"
-                class="form-range"
-                max="10"
-                min="0.1"
-                step="0.1"
-                type="range"
-              />
-              <div class="form-text mb-3">Each dial tick is multiplied by this value.</div>
-
-              <label class="form-label" for="rotationTickBucketSizeMs">
-                Tick bucket size
-                <span class="badge bg-secondary ms-1">{{ rotationTickBucketSizeMs }} ms</span>
-              </label>
-              <input
-                id="rotationTickBucketSizeMs"
-                v-model="rotationTickBucketSizeMs"
-                class="form-range"
-                max="1000"
-                min="0"
-                step="50"
-                type="range"
-              />
-              <div class="form-text mb-2">
-                Aggregates ticks for this duration before firing the service call. Zero = one call per
-                tick.
+                <div class="pi-var-text">
+                  <span v-pre class="pi-var-item">{{ rotationPercent }}</span> — 0–100
+                  rotation percentage.
+                </div>
+                <div class="pi-var-text">
+                  <span v-pre class="pi-var-item">{{ rotationAbsolute }}</span> — 0–255
+                  absolute rotation value.
+                </div>
               </div>
-            </AccordeonItem>
-          </template>
-        </AccordeonComponent>
+            </details>
+
+            <label class="pi-label" for="rotationTickMultiplier">
+              Tick multiplier
+              <span class="pi-badge ms-1">×{{ rotationTickMultiplier }}</span>
+            </label>
+            <input
+              id="rotationTickMultiplier"
+              v-model="rotationTickMultiplier"
+              class="pi-range"
+              max="10"
+              min="0.1"
+              step="0.1"
+              type="range"
+            />
+            <div class="pi-hint mb-3">Each dial tick is multiplied by this value.</div>
+
+            <label class="pi-label" for="rotationTickBucketSizeMs">
+              Tick bucket size
+              <span class="pi-badge ms-1">{{ rotationTickBucketSizeMs }} ms</span>
+            </label>
+            <input
+              id="rotationTickBucketSizeMs"
+              v-model="rotationTickBucketSizeMs"
+              class="pi-range"
+              max="1000"
+              min="0"
+              step="50"
+              type="range"
+            />
+            <div class="pi-hint mb-2">
+              Aggregates ticks for this duration before firing the service call. Zero = one call per
+              tick.
+            </div>
+          </ActionCard>
+        </template>
       </div>
 
-      <!-- ── Save button (always visible when connected) ──────────────────── -->
-      <button class="btn btn-sm btn-primary w-100 mt-2" type="button" @click="saveSettings">
+      <!-- ── Save button ───────────────────────────────────────────────────── -->
+      <button class="pi-btn pi-btn-primary pi-btn-block mt-2" type="button" @click="saveSettings">
         Save configuration
       </button>
     </template>
@@ -408,9 +335,10 @@ import { Service } from '@/modules/pi/service'
 import { computed, onMounted, ref, watch } from 'vue'
 import ServiceCallConfiguration from '@/components/ServiceCallConfiguration.vue'
 import { ObjectUtils } from '@/modules/common/utils'
-import AccordeonComponent from '@/components/accordeon/BootstrapAccordeon.vue'
-import AccordeonItem from '@/components/accordeon/BootstrapAccordeonItem.vue'
-import EntitySelection from '@/components/EntitySelection.vue'
+import ActionCard from '@/components/ui/ActionCard.vue'
+import EntityPicker from '@/components/ui/EntityPicker.vue'
+import SegmentedControl from '@/components/ui/SegmentedControl.vue'
+import PiToggleRow from '@/components/ui/PiToggleRow.vue'
 import axios from 'axios'
 import yaml from 'js-yaml'
 
@@ -609,7 +537,7 @@ function connectHomeAssistant() {
           })
           availableServices.value.push(
             new Service('streamdeck', 'open_url', {
-              url: { description: 'The URL to open (http, https, or any OS-registered protocol)', example: 'https://example.com' }
+              url: { description: 'The URL to open (http, https, or any OS-registered protocol)', example: 'https://example.com', required: true }
             }, null)
           )
           availableServiceDomains.value = ['streamdeck', ...Object.keys(services).sort()]

@@ -14,9 +14,7 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
-    "@popperjs/core": "^2.11.8",
     "axios": "1.13.5",
-    "bootstrap": "^5.3.8",
     "core-js": "^3.46.0",
     "home-assistant-js-websocket": "^9.6.0",
     "js-yaml": "4.1.1",
