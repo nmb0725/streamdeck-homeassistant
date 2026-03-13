@@ -72,11 +72,16 @@ export class SvgUtils {
         flatLabels.shift()
       }
     }
+    const textStroke =
+      iconLayout === 'FULL'
+        ? ' stroke="#000" stroke-width="6" stroke-linejoin="round" paint-order="stroke fill"'
+        : ''
+
     const textLines = flatLabels
       .slice(0, maxLines)
       .map((line, i) => {
         const y = quarterOfArea - (quarterOfArea * 1.2 - FONT_SIZE) / 2 + (i + labelIndexOffset) * quarterOfArea
-        return `<text x="${WIDTH / 2}" y="${y}" fill="#FFF" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle">${this.#escapeXml(line)}</text>`
+        return `<text x="${WIDTH / 2}" y="${y}" fill="#FFF" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle"${textStroke}>${this.#escapeXml(line)}</text>`
       })
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">${iconSvg}${indicator}${textLines.join('')}</svg>`
