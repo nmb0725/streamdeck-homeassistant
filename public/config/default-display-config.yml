@@ -22,8 +22,6 @@
 
 _color: '#AAAAAA'
 _labelTemplates:
-  - ''
-  - ''
   - |
     {% if (state | float('f')) == 'f' -%}
       {{ state }}
@@ -261,8 +259,6 @@ sensor:
 
 weather:
   labelTemplates:
-    - ''
-    - ''
     - '{{temperature}}{{temperature_unit}}'
     - '{{humidity}}%'
   states:
@@ -329,8 +325,6 @@ lawn_mower:
 
 fan:
   labelTemplates:
-    - ''
-    - ''
     - |
       {{'~' if oscillating}}
   icon: mdi:fan

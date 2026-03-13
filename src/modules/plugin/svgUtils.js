@@ -5,10 +5,6 @@ import { urlencode } from 'nunjucks/src/filters.js'
 const WIDTH = 288
 const HEIGHT = 288
 const FONT_SIZE = 48
-const MDI_VIEWBOX = 24
-const ICON_SCALE = Math.min(WIDTH / MDI_VIEWBOX, HEIGHT / 2 / MDI_VIEWBOX)
-const ICON_TX = (WIDTH - MDI_VIEWBOX * ICON_SCALE) / 2
-const ICON_TY = (HEIGHT / 2 - MDI_VIEWBOX * ICON_SCALE) / 2
 
 export class SvgUtils {
   renderButtonSVG(renderingConfig, stateObject) {
@@ -21,7 +17,8 @@ export class SvgUtils {
       renderingConfig.icon,
       renderingConfig.color,
       renderingConfig.isAction,
-      renderingConfig.isMultiAction
+      renderingConfig.isMultiAction,
+      renderingConfig.iconLayout ?? 'STANDARD'
     )
   }
 
@@ -34,12 +31,33 @@ export class SvgUtils {
     return templates?.map((template) => nunjucks.renderString(template ?? '', values)) ?? []
   }
 
-  #generateButtonSVG(labels, mdiIconName, iconColor, isAction = false, isMultiAction = false) {
+  #generateButtonSVG(
+    labels,
+    mdiIconName,
+    iconColor,
+    isAction = false,
+    isMultiAction = false,
+    iconLayout = 'STANDARD'
+  ) {
     const iconPath = this.#getMdiPath(mdiIconName)
-    const quarterHeight = HEIGHT / 4
+
+    let iconTransform, maxLines, labelIndexOffset
+    if (iconLayout === 'FULL') {
+      iconTransform = `translate(0, 0) scale(12)`
+      maxLines = 4
+      labelIndexOffset = 0
+    } else if (iconLayout === 'BOTTOM') {
+      iconTransform = `translate(72, 144) scale(6)`
+      maxLines = 2
+      labelIndexOffset = 0
+    } else {
+      iconTransform = `translate(72, 0) scale(6)`
+      maxLines = 2
+      labelIndexOffset = 2
+    }
 
     const iconSvg = iconPath
-      ? `<g transform="translate(${ICON_TX}, ${ICON_TY}) scale(${ICON_SCALE})"><path d="${iconPath}" fill="${iconColor ?? '#FFF'}"/></g>`
+      ? `<g transform="${iconTransform}"><path d="${iconPath}" fill="${iconColor ?? '#FFF'}"/></g>`
       : ''
 
     const indicatorColor = isMultiAction ? '#3e89ff' : '#62ff65'
@@ -47,10 +65,17 @@ export class SvgUtils {
       ? `<circle cx="${WIDTH - 1}" cy="0" r="30" fill="${indicatorColor}"/>`
       : ''
 
-    const textLines = labels
-      .flatMap((label) => label.split('\n'))
+    const quarterOfArea = HEIGHT / 4
+    let flatLabels = labels.flatMap((label) => label.split('\n'))
+    if (maxLines === 2) {
+      while (flatLabels.length > 0 && flatLabels[0].trim() === '') {
+        flatLabels.shift()
+      }
+    }
+    const textLines = flatLabels
+      .slice(0, maxLines)
       .map((line, i) => {
-        const y = quarterHeight - (quarterHeight * 1.2 - FONT_SIZE) / 2 + i * quarterHeight
+        const y = quarterOfArea - (quarterOfArea * 1.2 - FONT_SIZE) / 2 + (i + labelIndexOffset) * quarterOfArea
         return `<text x="${WIDTH / 2}" y="${y}" fill="#FFF" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle">${this.#escapeXml(line)}</text>`
       })
 

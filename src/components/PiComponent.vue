@@ -162,6 +162,23 @@
           </div>
         </div>
 
+        <!-- Icon layout -->
+        <div v-if="iconSettings !== 'HIDE'" class="mb-3">
+          <label class="pi-label">Icon layout</label>
+          <div class="pi-seg">
+            <input id="iconLayoutStandard" v-model="iconLayout" type="radio" value="STANDARD" />
+            <label for="iconLayoutStandard">Standard</label>
+            <input id="iconLayoutBottom" v-model="iconLayout" type="radio" value="BOTTOM" />
+            <label for="iconLayoutBottom">Bottom</label>
+            <input id="iconLayoutFull" v-model="iconLayout" type="radio" value="FULL" />
+            <label for="iconLayoutFull">Full</label>
+          </div>
+          <span class="pi-hint"
+            >Standard: icon top, 2 labels below. Bottom: icon bottom, 2 labels above. Full: icon
+            fills button, 4 labels overlaid.</span
+          >
+        </div>
+
         <!-- Service indicator (Keypad only) -->
         <template v-if="controllerType !== 'Encoder'">
           <PiToggleRow
@@ -396,6 +413,7 @@ const useCustomButtonLabels = ref(false)
 const buttonLabels = ref('')
 const enableServiceIndicator = ref(true)
 const iconSettings = ref('PREFER_PLUGIN')
+const iconLayout = ref('STANDARD')
 const availableEntityDomains = ref([])
 const availableEntities = ref([])
 const availableServiceDomains = ref([])
@@ -455,6 +473,7 @@ onMounted(() => {
         settings['display']['enableServiceIndicator'] ||
         settings['display']['enableServiceIndicator'] === undefined
       iconSettings.value = settings['display']['iconSettings']
+      iconLayout.value = settings['display']['iconLayout'] ?? 'STANDARD'
       useCustomTitle.value = settings['display']['useCustomTitle']
       buttonTitle.value = settings['display']['buttonTitle'] || '{{friendly_name}}'
       useCustomButtonLabels.value = settings['display']['useCustomButtonLabels']
@@ -617,7 +636,7 @@ function saveGlobalSettings() {
 
 function saveSettings() {
   let settings = {
-    version: 5,
+    version: 6,
 
     controllerType: controllerType.value,
 
@@ -627,6 +646,7 @@ function saveSettings() {
       buttonTitle: buttonTitle.value,
       enableServiceIndicator: enableServiceIndicator.value,
       iconSettings: iconSettings.value,
+      iconLayout: iconLayout.value,
       useCustomButtonLabels: useCustomButtonLabels.value,
       buttonLabels: buttonLabels.value,
       useStateImagesForOnOffStates: useStateImagesForOnOffStates.value // determined by action ID (manifest)

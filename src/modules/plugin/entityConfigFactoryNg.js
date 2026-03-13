@@ -63,6 +63,7 @@ export class EntityConfigFactory {
       renderingConfig.color = this.rgbToHex(rgbColor[0], rgbColor[1], rgbColor[2])
     }
 
+    renderingConfig.iconLayout = displaySettings.iconLayout ?? 'STANDARD'
     return renderingConfig
   }
 
