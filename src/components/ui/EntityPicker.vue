@@ -62,17 +62,17 @@
 import { computed, ref, watch } from 'vue'
 
 const DOMAIN_COLORS = {
-  light: '#d4a017',
+  light: '#b8860b',
   switch: '#2dd4bf',
   sensor: '#34d399',
   cover: '#a78bfa',
   media_player: '#f87171',
-  climate: '#60a5fa',
+  climate: '#2563eb',
   binary_sensor: '#fb923c',
   input_boolean: '#2dd4bf',
   automation: '#e879f9',
   script: '#a78bfa',
-  scene: '#4ade80',
+  scene: '#16a34a',
   default: '#6b7280'
 }
 

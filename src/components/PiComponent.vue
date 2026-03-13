@@ -141,35 +141,24 @@
         <label class="pi-label">Entity</label>
         <EntityPicker v-model="entity" class="mb-3" :available-entities="availableEntities" />
 
-        <label class="pi-label mt-3">Appearance</label>
-
-        <!-- Icon source segmented control -->
+        <!-- Icon source radio group -->
         <div class="mb-3">
-          <label
-            class="pi-label"
-            style="
-              font-size: 11px;
-              color: var(--pi-text-muted);
-              text-transform: none;
-              font-weight: normal;
-              letter-spacing: 0;
-            "
-            >Icon source</label
-          >
-          <SegmentedControl
-            v-model="iconSettings"
-            control-id="iconSource"
-            :options="[
-              { value: 'PREFER_PLUGIN', label: 'Plugin' },
-              { value: 'PREFER_HA', label: 'Home Assistant' },
-              { value: 'HIDE', label: 'Hide' }
-            ]"
-          />
-          <div v-if="iconSettings === 'PREFER_PLUGIN'" class="pi-seg-hint">
-            Plugin icon preferred; falls back to HA entity icon.
-          </div>
-          <div v-else-if="iconSettings === 'PREFER_HA'" class="pi-seg-hint">
-            HA entity icon preferred; falls back to plugin icon.
+          <label class="pi-label">Icon source</label>
+          <div class="pi-radio-group">
+            <label class="pi-radio-label">
+              <input v-model="iconSettings" type="radio" value="PREFER_PLUGIN" />
+              Plugin
+              <span class="pi-hint">Plugin icon preferred; falls back to HA entity icon.</span>
+            </label>
+            <label class="pi-radio-label">
+              <input v-model="iconSettings" type="radio" value="PREFER_HA" />
+              Home Assistant
+              <span class="pi-hint">HA entity icon preferred; falls back to plugin icon.</span>
+            </label>
+            <label class="pi-radio-label">
+              <input v-model="iconSettings" type="radio" value="HIDE" />
+              Hide
+            </label>
           </div>
         </div>
 
@@ -373,7 +362,6 @@ import ServiceCallConfiguration from '@/components/ServiceCallConfiguration.vue'
 import { ObjectUtils } from '@/modules/common/utils'
 import ActionCard from '@/components/ui/ActionCard.vue'
 import EntityPicker from '@/components/ui/EntityPicker.vue'
-import SegmentedControl from '@/components/ui/SegmentedControl.vue'
 import PiToggleRow from '@/components/ui/PiToggleRow.vue'
 import axios from 'axios'
 import yaml from 'js-yaml'

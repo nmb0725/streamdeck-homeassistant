@@ -9,7 +9,7 @@
   /* Text */
   --pi-text-primary: #e8e9ea;
   --pi-text-secondary: #9a9b9d;
-  --pi-text-muted: #5c5d5f;
+  --pi-text-muted: #848587;
   --pi-text-link: #5b9bd5;
 
   /* Accent */
@@ -517,6 +517,34 @@ a {
   font-size: 11px;
   color: var(--pi-text-muted);
   margin-top: 4px;
+}
+
+// ── Radio Group ────────────────────────────────────────────────────────────
+.pi-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pi-radio-label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 6px;
+  font-size: 12px;
+  color: var(--pi-text-primary);
+  cursor: pointer;
+
+  input[type='radio'] {
+    accent-color: var(--pi-accent);
+    margin: 0;
+  }
+
+  .pi-hint {
+    grid-column: 2;
+    display: block;
+    font-size: 11px;
+  }
 }
 
 // ── Entity Picker ─────────────────────────────────────────────────────────
