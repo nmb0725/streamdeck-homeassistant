@@ -1,65 +1,60 @@
 <template>
-  <div class="pi-entity-picker">
-    <div class="pi-entity-search">
+  <div ref="pickerEl" class="pi-entity-picker">
+    <div class="pi-entity-search" :class="{ open: isOpen }">
       <span class="pi-search-icon">&#128269;</span>
       <input
         ref="searchInput"
-        v-model="filter"
-        type="search"
-        :placeholder="compact ? 'Filter…' : 'Filter by name or entity ID…'"
+        :value="inputDisplayValue"
+        type="text"
+        :placeholder="isOpen ? 'Filter by name or entity ID…' : 'No entity selected'"
         autocomplete="off"
         spellcheck="false"
-        @keydown="onSearchKeydown"
+        :class="{ 'has-value': !isOpen && modelValue }"
+        @focus="onFocus"
+        @input="filter = $event.target.value"
+        @keydown="onKeydown"
       />
       <button
+        v-if="modelValue"
         class="pi-clear-btn"
-        :class="{ hidden: !filter }"
         tabindex="-1"
-        aria-label="Clear filter"
-        @click="filter = ''"
+        aria-label="Clear selection"
+        @mousedown.prevent="clear"
       >
         ✕
       </button>
     </div>
 
-    <div
-      ref="listEl"
-      class="pi-entity-list"
-      :class="compact ? 'rows-4' : 'rows-6'"
-      role="listbox"
-      tabindex="0"
-      @keydown="onListKeydown"
-    >
-      <div
-        v-for="(entity, index) in filteredEntities"
-        :key="entity.entityId"
-        :ref="(el) => (itemRefs[index] = el)"
-        class="pi-entity-item"
-        :class="{
-          selected: entity.entityId === modelValue,
-          focused: index === focusedIndex
-        }"
-        role="option"
-        :aria-selected="entity.entityId === modelValue"
-        @click="select(entity.entityId)"
-        @mouseenter="focusedIndex = index"
-      >
-        <span class="pi-entity-badge" :style="{ background: domainColor(entity.domain) }">{{
-          entity.domain
-        }}</span>
-        <span class="pi-entity-name">{{ entity.title }}</span>
-        <span class="pi-entity-id">{{ entity.entityId }}</span>
+    <div v-if="isOpen" class="pi-entity-dropdown">
+      <div ref="listEl" class="pi-entity-list">
+        <div
+          v-for="(entity, index) in filteredEntities"
+          :key="entity.entityId"
+          :ref="(el) => (itemRefs[index] = el)"
+          class="pi-entity-item"
+          :class="{
+            selected: entity.entityId === modelValue,
+            focused: index === focusedIndex
+          }"
+          @mousedown.prevent="select(entity.entityId)"
+          @mouseenter="focusedIndex = index"
+        >
+          <span class="pi-entity-badge" :style="{ background: domainColor(entity.domain) }">{{
+            entity.domain
+          }}</span>
+          <span class="pi-entity-name">{{ entity.title }}</span>
+          <span class="pi-entity-id">{{ entity.entityId }}</span>
+        </div>
       </div>
-    </div>
-
-    <div class="pi-entity-count">
-      {{ filteredEntities.length }} of {{ availableEntities.length }} entities
+      <div class="pi-entity-count">
+        {{ filteredEntities.length }} of {{ availableEntities.length }} entities
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const DOMAIN_COLORS = {
   light: '#b8860b',
@@ -94,9 +89,22 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const filter = ref('')
+const isOpen = ref(false)
 const focusedIndex = ref(-1)
 const itemRefs = ref([])
-const listEl = ref(null)
+const pickerEl = ref(null)
+const searchInput = ref(null)
+
+const selectedEntity = computed(
+  () => props.availableEntities.find((e) => e.entityId === props.modelValue) ?? null
+)
+
+const inputDisplayValue = computed(() => {
+  if (!isOpen.value && selectedEntity.value) {
+    return selectedEntity.value.title || selectedEntity.value.entityId
+  }
+  return filter.value
+})
 
 const filteredEntities = computed(() => {
   if (!filter.value) return props.availableEntities
@@ -115,16 +123,33 @@ function domainColor(domain) {
   return DOMAIN_COLORS[domain] ?? DOMAIN_COLORS.default
 }
 
+function onFocus() {
+  filter.value = ''
+  isOpen.value = true
+  focusedIndex.value = -1
+}
+
 function select(entityId) {
   emit('update:modelValue', entityId)
+  isOpen.value = false
+  filter.value = ''
+  searchInput.value?.blur()
+}
+
+function clear() {
+  emit('update:modelValue', '')
+  filter.value = ''
+  isOpen.value = false
 }
 
 function scrollFocused() {
-  const el = itemRefs.value[focusedIndex.value]
-  if (el) el.scrollIntoView({ block: 'nearest' })
+  itemRefs.value[focusedIndex.value]?.scrollIntoView({ block: 'nearest' })
 }
 
-function onSearchKeydown(e) {
+function onKeydown(e) {
+  if (!isOpen.value && e.key !== 'Escape') {
+    isOpen.value = true
+  }
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     focusedIndex.value = Math.min(focusedIndex.value + 1, filteredEntities.value.length - 1)
@@ -139,23 +164,19 @@ function onSearchKeydown(e) {
     const entity = filteredEntities.value[idx]
     if (entity) select(entity.entityId)
   } else if (e.key === 'Escape') {
+    isOpen.value = false
+    filter.value = ''
+    searchInput.value?.blur()
+  }
+}
+
+function onDocumentMousedown(e) {
+  if (pickerEl.value && !pickerEl.value.contains(e.target)) {
+    isOpen.value = false
     filter.value = ''
   }
 }
 
-function onListKeydown(e) {
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    focusedIndex.value = Math.min(focusedIndex.value + 1, filteredEntities.value.length - 1)
-    scrollFocused()
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    focusedIndex.value = Math.max(focusedIndex.value - 1, 0)
-    scrollFocused()
-  } else if (e.key === 'Enter') {
-    e.preventDefault()
-    const entity = filteredEntities.value[focusedIndex.value]
-    if (entity) select(entity.entityId)
-  }
-}
+onMounted(() => document.addEventListener('mousedown', onDocumentMousedown))
+onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentMousedown))
 </script>

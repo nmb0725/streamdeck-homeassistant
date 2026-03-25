@@ -549,19 +549,23 @@ a {
 
 // ── Entity Picker ─────────────────────────────────────────────────────────
 .pi-entity-picker {
-  border: 1px solid var(--pi-border);
-  border-radius: var(--pi-radius);
-  overflow: hidden;
-  background: var(--pi-bg-sunken);
+  position: relative;
   margin-bottom: 8px;
 }
 
 .pi-entity-search {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--pi-border);
+  border: 1px solid var(--pi-border);
+  border-radius: var(--pi-radius);
+  background: var(--pi-bg-sunken);
   padding: 0 8px;
   gap: 4px;
+
+  &.open {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 
   .pi-search-icon {
     color: var(--pi-text-muted);
@@ -578,6 +582,11 @@ a {
     font-size: 12px;
     padding: 7px 2px;
     font-family: inherit;
+    cursor: pointer;
+
+    &.has-value {
+      cursor: text;
+    }
 
     &::placeholder {
       color: var(--pi-text-muted);
@@ -600,21 +609,29 @@ a {
       color: var(--pi-text-secondary);
       background: var(--pi-bg-overlay);
     }
-    &.hidden {
-      visibility: hidden;
-    }
   }
 }
 
-.pi-entity-list {
-  overflow-y: auto;
-  outline: none;
+.pi-entity-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--pi-bg-sunken);
+  border: 1px solid var(--pi-border);
+  border-top: none;
+  border-radius: 0 0 var(--pi-radius) var(--pi-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow: hidden;
 
-  &.rows-6 {
-    height: calc(6 * 32px);
-  }
-  &.rows-4 {
-    height: calc(4 * 32px);
+  .pi-entity-list {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
   }
 }
 
@@ -681,6 +698,7 @@ a {
   color: var(--pi-text-muted);
   border-top: 1px solid var(--pi-border);
   background: var(--pi-bg-raised);
+  flex-shrink: 0;
 }
 
 // ── Action Card ───────────────────────────────────────────────────────────
