@@ -139,7 +139,7 @@
       <!-- ── Appearance pane ──────────────────────────────────────────────── -->
       <div v-show="activeTab === 'appearance'">
         <label class="pi-label">Entity</label>
-        <EntityPicker v-model="entity" class="mb-3" :available-entities="availableEntities" />
+        <TypeaheadSelect v-model="entity" class="mb-3" :items="entityItems" placeholder="No entity selected" />
 
         <!-- Icon source radio group -->
         <div class="mb-3">
@@ -378,7 +378,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import ServiceCallConfiguration from '@/components/ServiceCallConfiguration.vue'
 import { ObjectUtils } from '@/modules/common/utils'
 import ActionCard from '@/components/ui/ActionCard.vue'
-import EntityPicker from '@/components/ui/EntityPicker.vue'
+import TypeaheadSelect from '@/components/ui/TypeaheadSelect.vue'
 import PiToggleRow from '@/components/ui/PiToggleRow.vue'
 import axios from 'axios'
 import yaml from 'js-yaml'
@@ -416,6 +416,9 @@ const iconSettings = ref('PREFER_PLUGIN')
 const iconLayout = ref('STANDARD')
 const availableEntityDomains = ref([])
 const availableEntities = ref([])
+const entityItems = computed(() =>
+  availableEntities.value.map((e) => ({ id: e.entityId, label: e.title, group: e.domain }))
+)
 const availableServiceDomains = ref([])
 const availableServices = ref([])
 const currentStates = ref([])

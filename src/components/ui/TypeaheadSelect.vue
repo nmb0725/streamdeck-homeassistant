@@ -6,7 +6,7 @@
         ref="searchInput"
         :value="inputDisplayValue"
         type="text"
-        :placeholder="isOpen ? 'Filter by name or entity ID…' : 'No entity selected'"
+        :placeholder="isOpen ? 'Filter…' : placeholder"
         autocomplete="off"
         spellcheck="false"
         :class="{ 'has-value': !isOpen && modelValue }"
@@ -28,27 +28,25 @@
     <div v-if="isOpen" class="pi-entity-dropdown">
       <div ref="listEl" class="pi-entity-list">
         <div
-          v-for="(entity, index) in filteredEntities"
-          :key="entity.entityId"
+          v-for="(item, index) in filteredItems"
+          :key="item.id"
           :ref="(el) => (itemRefs[index] = el)"
           class="pi-entity-item"
-          :class="{
-            selected: entity.entityId === modelValue,
-            focused: index === focusedIndex
-          }"
-          @mousedown.prevent="select(entity.entityId)"
+          :class="{ selected: item.id === modelValue, focused: index === focusedIndex }"
+          @mousedown.prevent="select(item.id)"
           @mouseenter="focusedIndex = index"
         >
-          <span class="pi-entity-badge" :style="{ background: domainColor(entity.domain) }">{{
-            entity.domain
-          }}</span>
-          <span class="pi-entity-name">{{ entity.title }}</span>
-          <span class="pi-entity-id">{{ entity.entityId }}</span>
+          <span
+            v-if="item.group"
+            class="pi-entity-badge"
+            :style="{ background: groupColor(item.group) }"
+            >{{ item.group }}</span
+          >
+          <span class="pi-entity-name">{{ item.label }}</span>
+          <span v-if="item.id !== item.label" class="pi-entity-id">{{ item.id }}</span>
         </div>
       </div>
-      <div class="pi-entity-count">
-        {{ filteredEntities.length }} of {{ availableEntities.length }} entities
-      </div>
+      <div class="pi-entity-count">{{ filteredItems.length }} of {{ items.length }}</div>
     </div>
   </div>
 </template>
@@ -56,7 +54,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-const DOMAIN_COLORS = {
+const GROUP_COLORS = {
   light: '#b8860b',
   switch: '#2dd4bf',
   sensor: '#34d399',
@@ -76,13 +74,13 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  availableEntities: {
+  items: {
     required: true,
-    type: Array
+    type: Array // { id: string, label: string, group?: string }[]
   },
-  compact: {
-    type: Boolean,
-    default: false
+  placeholder: {
+    type: String,
+    default: 'No selection'
   }
 })
 
@@ -95,32 +93,30 @@ const itemRefs = ref([])
 const pickerEl = ref(null)
 const searchInput = ref(null)
 
-const selectedEntity = computed(
-  () => props.availableEntities.find((e) => e.entityId === props.modelValue) ?? null
-)
+const selectedItem = computed(() => props.items.find((i) => i.id === props.modelValue) ?? null)
 
 const inputDisplayValue = computed(() => {
-  if (!isOpen.value && selectedEntity.value) {
-    return selectedEntity.value.title || selectedEntity.value.entityId
+  if (!isOpen.value && selectedItem.value) {
+    return selectedItem.value.label
   }
   return filter.value
 })
 
-const filteredEntities = computed(() => {
-  if (!filter.value) return props.availableEntities
+const filteredItems = computed(() => {
+  if (!filter.value) return props.items
   const lc = filter.value.toLowerCase()
-  return props.availableEntities.filter(
-    (e) => e.entityId.toLowerCase().includes(lc) || e.title.toLowerCase().includes(lc)
+  return props.items.filter(
+    (i) => i.id.toLowerCase().includes(lc) || i.label.toLowerCase().includes(lc)
   )
 })
 
-watch(filteredEntities, () => {
+watch(filteredItems, () => {
   focusedIndex.value = -1
   itemRefs.value = []
 })
 
-function domainColor(domain) {
-  return DOMAIN_COLORS[domain] ?? DOMAIN_COLORS.default
+function groupColor(group) {
+  return GROUP_COLORS[group] ?? GROUP_COLORS.default
 }
 
 function onFocus() {
@@ -129,8 +125,8 @@ function onFocus() {
   focusedIndex.value = -1
 }
 
-function select(entityId) {
-  emit('update:modelValue', entityId)
+function select(id) {
+  emit('update:modelValue', id)
   isOpen.value = false
   filter.value = ''
   searchInput.value?.blur()
@@ -152,7 +148,7 @@ function onKeydown(e) {
   }
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    focusedIndex.value = Math.min(focusedIndex.value + 1, filteredEntities.value.length - 1)
+    focusedIndex.value = Math.min(focusedIndex.value + 1, filteredItems.value.length - 1)
     scrollFocused()
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
@@ -161,8 +157,8 @@ function onKeydown(e) {
   } else if (e.key === 'Enter') {
     e.preventDefault()
     const idx = focusedIndex.value >= 0 ? focusedIndex.value : 0
-    const entity = filteredEntities.value[idx]
-    if (entity) select(entity.entityId)
+    const item = filteredItems.value[idx]
+    if (item) select(item.id)
   } else if (e.key === 'Escape') {
     isOpen.value = false
     filter.value = ''

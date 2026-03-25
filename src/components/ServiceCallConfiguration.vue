@@ -1,77 +1,33 @@
 <template>
   <div>
     <div class="mb-2">
-      <label class="pi-label" for="domain">Domain</label>
-      <div class="pi-input-row">
-        <select
-          id="domain"
-          v-model="selectedDomain"
-          class="pi-select"
-          @change="(update('serviceId', null), update('entityId', null))"
-        >
-          <option
-            v-for="availableDomain in availableDomains"
-            :key="availableDomain"
-            :value="availableDomain"
-          >
-            {{ availableDomain }}
-          </option>
-        </select>
-        <button
-          class="pi-btn pi-btn-ghost pi-btn-sm"
-          type="button"
-          aria-label="Clear domain selection"
-          @click="((selectedDomain = ''), clear('serviceId', 'entityId', 'serviceData'))"
-        >
-          ✕
-        </button>
-      </div>
+      <label class="pi-label">Domain</label>
+      <TypeaheadSelect
+        :model-value="selectedDomain"
+        :items="domainItems"
+        placeholder="No domain selected"
+        @update:model-value="onDomainChange"
+      />
     </div>
 
     <div v-if="selectedDomain" class="mb-2">
-      <label class="pi-label" for="service">Service</label>
-      <div class="pi-input-row">
-        <select
-          id="service"
-          :value="modelValue.serviceId"
-          class="pi-select"
-          @change="update('serviceId', $event.target.value)"
-        >
-          <option
-            v-for="domainService in domainServices"
-            :key="domainService.serviceId"
-            :value="domainService.serviceId"
-          >
-            {{ domainService.name }}
-          </option>
-        </select>
-        <button
-          class="pi-btn pi-btn-ghost pi-btn-sm"
-          type="button"
-          aria-label="Clear service selection"
-          @click="clear('serviceId', 'entityId', 'serviceData')"
-        >
-          ✕
-        </button>
-      </div>
+      <label class="pi-label">Service</label>
+      <TypeaheadSelect
+        :model-value="modelValue.serviceId"
+        :items="serviceItems"
+        placeholder="No service selected"
+        @update:model-value="onServiceChange"
+      />
     </div>
 
     <div v-if="domainEntities.length > 0" class="mb-2">
       <label class="pi-label">Entity</label>
-      <EntityPicker
-        :available-entities="domainEntities"
+      <TypeaheadSelect
         :model-value="props.modelValue.entityId"
-        :compact="true"
+        :items="entityItems"
+        placeholder="No entity selected"
         @update:model-value="update('entityId', $event)"
       />
-      <button
-        class="pi-btn pi-btn-ghost pi-btn-sm mt-1"
-        type="button"
-        aria-label="Clear entity selection"
-        @click="clear('entityId')"
-      >
-        Clear entity
-      </button>
     </div>
 
     <template v-if="props.modelValue.serviceId">
@@ -128,7 +84,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import nunjucks from 'nunjucks'
-import EntityPicker from '@/components/ui/EntityPicker.vue'
+import TypeaheadSelect from '@/components/ui/TypeaheadSelect.vue'
 
 const titleSort = (s1, s2) => (s1.name.toLowerCase() > s2.name.toLowerCase() ? 1 : -1)
 
@@ -177,6 +133,29 @@ const availableDomains = computed(() => {
   }
   return [...new Set(props.availableServices.map((service) => service.domain))].sort()
 })
+
+const domainItems = computed(() => availableDomains.value.map((d) => ({ id: d, label: d })))
+
+const serviceItems = computed(() =>
+  domainServices.value.map((s) => ({ id: s.serviceId, label: s.name }))
+)
+
+const entityItems = computed(() =>
+  domainEntities.value.map((e) => ({ id: e.entityId, label: e.title, group: e.domain }))
+)
+
+function onDomainChange(val) {
+  selectedDomain.value = val
+  clear('serviceId', 'entityId', 'serviceData')
+}
+
+function onServiceChange(val) {
+  if (!val) {
+    clear('serviceId', 'entityId', 'serviceData')
+  } else {
+    update('serviceId', val)
+  }
+}
 
 const domainServices = computed(() => {
   if (!props.availableServices.length || !selectedDomain.value) {

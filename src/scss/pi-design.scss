@@ -757,7 +757,7 @@ a {
 }
 
 .pi-action-body {
-  overflow: hidden;
+  overflow: clip;
   transition: max-height 0.2s ease;
 
   &[data-open='false'] {
