@@ -58,10 +58,10 @@ async function fetchEntityPictureAsDataUri(entityPictureUrl, serverUrl) {
         const ctx = canvas.getContext('2d')
         ctx.fillStyle = '#000'
         ctx.fillRect(0, 0, 288, 288)
-        const scale = Math.min(288 / img.width, 288 / img.height)
+        const scale = Math.max(288 / img.width, 288 / img.height)
         const w = img.width * scale
         const h = img.height * scale
-        ctx.drawImage(img, (288 - w) / 2, (288 - h) / 2, w, h)
+        ctx.drawImage(img, (288 - w) / 2, 0, w, h)
         const dataUri = canvas.toDataURL('image/jpeg', 0.20)
         setCachedImage(fullUrl, dataUri)
         resolve(dataUri)
