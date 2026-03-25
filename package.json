@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "validate": "streamdeck validate --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
-    "build-dev": "vite build --mode development --watch --sourcemap inline --minify false",
+    "build-dev": "vite build --mode development --sourcemap inline --minify false",
     "bundle": "streamdeck bundle -f --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
     "lint": "eslint . --fix",
     "format": "prettier --write src/"

@@ -3,19 +3,79 @@
 </template>
 
 <script setup>
+import { GlobalSettings, Settings } from '@/modules/common/settings'
 import { StreamDeck } from '@/modules/common/streamdeck'
 import { Homeassistant } from '@/modules/homeassistant/homeassistant'
-import { SvgUtils } from '@/modules/plugin/svgUtils'
-import nunjucks from 'nunjucks'
-import { Settings, GlobalSettings } from '@/modules/common/settings'
-import { onMounted, ref } from 'vue'
 import { EntityConfigFactory } from '@/modules/plugin/entityConfigFactoryNg'
-import defaultActiveStates from '../../public/config/active-states.yml'
+import { SvgUtils } from '@/modules/plugin/svgUtils'
 import axios from 'axios'
 import yaml from 'js-yaml'
+import nunjucks from 'nunjucks'
+import { onMounted, ref } from 'vue'
+import defaultActiveStates from '../../public/config/active-states.yml'
 
 let entityConfigFactory
 const svgUtils = new SvgUtils()
+
+const IMAGE_CACHE_MAX = 30
+const imageCache = new Map()
+
+function getCachedImage(url) {
+  if (!imageCache.has(url)) return null
+  const value = imageCache.get(url)
+  imageCache.delete(url)
+  imageCache.set(url, value)
+  return value
+}
+
+function setCachedImage(url, dataUri) {
+  if (imageCache.size >= IMAGE_CACHE_MAX) {
+    imageCache.delete(imageCache.keys().next().value)
+  }
+  imageCache.set(url, dataUri)
+}
+
+async function fetchEntityPictureAsDataUri(entityPictureUrl, serverUrl) {
+  const fullUrl = entityPictureUrl.startsWith('http')
+    ? entityPictureUrl
+    : serverUrl.replace(/\/$/, '') + entityPictureUrl
+
+  const cached = getCachedImage(fullUrl)
+  if (cached) return cached
+
+  try {
+    const response = await fetch(fullUrl)
+    if (!response.ok) return null
+    const blob = await response.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(blobUrl)
+        const canvas = document.createElement('canvas')
+        canvas.width = 288
+        canvas.height = 288
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#000'
+        ctx.fillRect(0, 0, 288, 288)
+        const scale = Math.min(288 / img.width, 288 / img.height)
+        const w = img.width * scale
+        const h = img.height * scale
+        ctx.drawImage(img, (288 - w) / 2, (288 - h) / 2, w, h)
+        const dataUri = canvas.toDataURL('image/jpeg', 0.20)
+        setCachedImage(fullUrl, dataUri)
+        resolve(dataUri)
+      }
+      img.onerror = () => {
+        URL.revokeObjectURL(blobUrl)
+        resolve(null)
+      }
+      img.src = blobUrl
+    })
+  } catch {
+    return null
+  }
+}
 
 const $SD = ref(null)
 const $HA = ref(null)
@@ -260,7 +320,7 @@ function isEncoder(contextSettings) {
   return contextSettings.controllerType === 'Encoder'
 }
 
-function updateContextState(currentContext, domain, stateObject) {
+async function updateContextState(currentContext, domain, stateObject) {
   let contextSettings = actionSettings.value[currentContext]
   let renderingConfig = entityConfigFactory.determineConfig(
     domain,
@@ -335,13 +395,40 @@ function updateContextState(currentContext, domain, stateObject) {
           : entityConfigFactory.colors.neutral
     }
 
+    const entityPicture = stateObject.attributes?.entity_picture
+    if (entityPicture && globalSettings.value?.serverUrl) {
+      renderingConfig.backgroundImage = await fetchEntityPictureAsDataUri(
+        entityPicture,
+        globalSettings.value.serverUrl
+      )
+    }
+
     const buttonSVG = svgUtils.renderButtonSVG(renderingConfig, stateObject)
-    setButtonSVG(buttonSVG, currentContext)
+    await setButtonSVG(buttonSVG, currentContext)
   }
 }
 
-function setButtonSVG(svg, changedContext) {
-  $SD.value.setImage(changedContext, 'data:image/svg+xml;,' + svg)
+async function setButtonSVG(svg, changedContext) {
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml' })
+  const blobUrl = URL.createObjectURL(svgBlob)
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(blobUrl)
+      const canvas = document.createElement('canvas')
+      canvas.width = 288
+      canvas.height = 288
+      canvas.getContext('2d').drawImage(img, 0, 0)
+      $SD.value.setImage(changedContext, canvas.toDataURL('image/jpeg', 0.92))
+      resolve()
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(blobUrl)
+      $SD.value.setImage(changedContext, 'data:image/svg+xml;,' + svg)
+      resolve()
+    }
+    img.src = blobUrl
+  })
 }
 
 function buttonDown(context) {

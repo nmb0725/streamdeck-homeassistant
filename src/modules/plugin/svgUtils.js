@@ -1,10 +1,11 @@
 import * as Mdi from '@mdi/js'
 import nunjucks from 'nunjucks'
-import { urlencode } from 'nunjucks/src/filters.js'
+
 
 const WIDTH = 288
 const HEIGHT = 288
 const FONT_SIZE = 48
+const BG_OVERLAY_OPACITY = 0.55
 
 export class SvgUtils {
   renderButtonSVG(renderingConfig, stateObject) {
@@ -18,7 +19,8 @@ export class SvgUtils {
       renderingConfig.color,
       renderingConfig.isAction,
       renderingConfig.isMultiAction,
-      renderingConfig.iconLayout ?? 'STANDARD'
+      renderingConfig.iconLayout ?? 'STANDARD',
+      renderingConfig.backgroundImage ?? null
     )
   }
 
@@ -37,8 +39,14 @@ export class SvgUtils {
     iconColor,
     isAction = false,
     isMultiAction = false,
-    iconLayout = 'STANDARD'
+    iconLayout = 'STANDARD',
+    backgroundImage = null
   ) {
+    const backgroundSvg = backgroundImage
+      ? `<image href="${backgroundImage}" x="0" y="0" width="${WIDTH}" height="${HEIGHT}" preserveAspectRatio="xMidYMid slice"/>` +
+        `<rect x="0" y="0" width="${WIDTH}" height="${HEIGHT}" fill="rgba(0,0,0,${BG_OVERLAY_OPACITY})"/>`
+      : ''
+
     const iconPath = this.#getMdiPath(mdiIconName)
 
     let iconTransform, maxLines, labelIndexOffset
@@ -72,19 +80,22 @@ export class SvgUtils {
         flatLabels.shift()
       }
     }
-    const textStroke =
-      iconLayout === 'FULL'
-        ? ' stroke="#000" stroke-width="6" stroke-linejoin="round" paint-order="stroke fill"'
-        : ''
-
     const textLines = flatLabels
       .slice(0, maxLines)
       .map((line, i) => {
         const y = quarterOfArea - (quarterOfArea * 1.2 - FONT_SIZE) / 2 + (i + labelIndexOffset) * quarterOfArea
-        return `<text x="${WIDTH / 2}" y="${y}" fill="#FFF" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle"${textStroke}>${this.#escapeXml(line)}</text>`
+        const escaped = this.#escapeXml(line)
+        const baseAttrs = `x="${WIDTH / 2}" y="${y}" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle"`
+        if (iconLayout === 'FULL') {
+          return (
+            `<text ${baseAttrs} fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round">${escaped}</text>` +
+            `<text ${baseAttrs} fill="#FFF">${escaped}</text>`
+          )
+        }
+        return `<text ${baseAttrs} fill="#FFF">${escaped}</text>`
       })
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">${iconSvg}${indicator}${textLines.join('')}</svg>`
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">${backgroundSvg}${iconSvg}${indicator}${textLines.join('')}</svg>`
   }
 
   #getMdiPath(mdiIconName) {
@@ -99,6 +110,6 @@ export class SvgUtils {
   }
 
   #escapeXml(text) {
-    return urlencode(text)
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   }
 }
