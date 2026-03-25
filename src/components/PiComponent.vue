@@ -127,13 +127,42 @@
         </button>
         <button
           class="pi-tab"
-          :class="{ active: activeTab === 'actions' }"
+          :class="{ active: activeTab === 'short_press' }"
           type="button"
-          @click="activeTab = 'actions'"
+          @click="activeTab = 'short_press'"
         >
-          Actions
-          <span v-if="anyActionConfigured" class="pi-tab-badge"></span>
+          Short Press
+          <span v-if="serviceShortPress.serviceId" class="pi-tab-badge"></span>
         </button>
+        <button
+          class="pi-tab"
+          :class="{ active: activeTab === 'long_press' }"
+          type="button"
+          @click="activeTab = 'long_press'"
+        >
+          Long Press
+          <span v-if="serviceLongPress.serviceId" class="pi-tab-badge"></span>
+        </button>
+        <template v-if="controllerType === 'Encoder'">
+          <button
+            class="pi-tab"
+            :class="{ active: activeTab === 'screen_tap' }"
+            type="button"
+            @click="activeTab = 'screen_tap'"
+          >
+            Screen Tap
+            <span v-if="serviceTap.serviceId" class="pi-tab-badge"></span>
+          </button>
+          <button
+            class="pi-tab"
+            :class="{ active: activeTab === 'rotation' }"
+            type="button"
+            @click="activeTab = 'rotation'"
+          >
+            Rotation
+            <span v-if="serviceRotation.serviceId" class="pi-tab-badge"></span>
+          </button>
+        </template>
       </div>
 
       <!-- ── Appearance pane ──────────────────────────────────────────────── -->
@@ -231,132 +260,91 @@
         </PiToggleRow>
       </div>
 
-      <!-- ── Actions pane ─────────────────────────────────────────────────── -->
-      <div v-show="activeTab === 'actions'">
-        <ActionCard
-          title="Short Press"
-          :configured="!!serviceShortPress.serviceId"
-          :summary="
-            serviceShortPress.serviceId
-              ? serviceShortPress.entityId
-                ? serviceShortPress.serviceId + ' · ' + serviceShortPress.entityId
-                : serviceShortPress.serviceId
-              : ''
-          "
-        >
-          <ServiceCallConfiguration
-            v-model="serviceShortPress"
-            :available-entities="availableEntities"
-            :available-services="availableServices"
-          />
-        </ActionCard>
+      <!-- ── Short Press pane ─────────────────────────────────────────────── -->
+      <div v-show="activeTab === 'short_press'">
+        <ServiceCallConfiguration
+          v-model="serviceShortPress"
+          :available-entities="availableEntities"
+          :available-services="availableServices"
+        />
+      </div>
 
-        <ActionCard
-          title="Long Press"
-          :configured="!!serviceLongPress.serviceId"
-          :summary="
-            serviceLongPress.serviceId
-              ? serviceLongPress.entityId
-                ? serviceLongPress.serviceId + ' · ' + serviceLongPress.entityId
-                : serviceLongPress.serviceId
-              : ''
-          "
-        >
-          <ServiceCallConfiguration
-            v-model="serviceLongPress"
-            :available-entities="availableEntities"
-            :available-services="availableServices"
-          />
-        </ActionCard>
+      <!-- ── Long Press pane ──────────────────────────────────────────────── -->
+      <div v-show="activeTab === 'long_press'">
+        <ServiceCallConfiguration
+          v-model="serviceLongPress"
+          :available-entities="availableEntities"
+          :available-services="availableServices"
+        />
+      </div>
 
-        <template v-if="controllerType === 'Encoder'">
-          <ActionCard
-            title="Screen Tap"
-            :configured="!!serviceTap.serviceId"
-            :summary="
-              serviceTap.serviceId
-                ? serviceTap.entityId
-                  ? serviceTap.serviceId + ' · ' + serviceTap.entityId
-                  : serviceTap.serviceId
-                : ''
-            "
-          >
-            <ServiceCallConfiguration
-              v-model="serviceTap"
-              :available-entities="availableEntities"
-              :available-services="availableServices"
-            />
-          </ActionCard>
+      <!-- ── Screen Tap pane (Encoder only) ───────────────────────────────── -->
+      <div v-if="controllerType === 'Encoder'" v-show="activeTab === 'screen_tap'">
+        <ServiceCallConfiguration
+          v-model="serviceTap"
+          :available-entities="availableEntities"
+          :available-services="availableServices"
+        />
+      </div>
 
-          <ActionCard
-            title="Rotation"
-            :configured="!!serviceRotation.serviceId"
-            :summary="
-              serviceRotation.serviceId
-                ? serviceRotation.entityId
-                  ? serviceRotation.serviceId + ' · ' + serviceRotation.entityId
-                  : serviceRotation.serviceId
-                : ''
-            "
-          >
-            <ServiceCallConfiguration
-              v-model="serviceRotation"
-              :available-entities="availableEntities"
-              :available-services="availableServices"
-            />
+      <!-- ── Rotation pane (Encoder only) ─────────────────────────────────── -->
+      <div v-if="controllerType === 'Encoder'" v-show="activeTab === 'rotation'">
+        <ServiceCallConfiguration
+          v-model="serviceRotation"
+          :available-entities="availableEntities"
+          :available-services="availableServices"
+        />
 
-            <details class="pi-vars mt-2 mb-3">
-              <summary>Available variables</summary>
-              <div class="pi-vars-content">
-                <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ ticks }}</span> — ticks rotated (negative =
-                  left, positive = right).
-                </div>
-                <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ rotationPercent }}</span> — 0–100 rotation
-                  percentage.
-                </div>
-                <div class="pi-var-text">
-                  <span v-pre class="pi-var-item">{{ rotationAbsolute }}</span> — 0–255 absolute
-                  rotation value.
-                </div>
-              </div>
-            </details>
-
-            <label class="pi-label" for="rotationTickMultiplier">
-              Tick multiplier
-              <span class="pi-badge ms-1">×{{ rotationTickMultiplier }}</span>
-            </label>
-            <input
-              id="rotationTickMultiplier"
-              v-model="rotationTickMultiplier"
-              class="pi-range"
-              max="10"
-              min="0.1"
-              step="0.1"
-              type="range"
-            />
-            <div class="pi-hint mb-3">Each dial tick is multiplied by this value.</div>
-
-            <label class="pi-label" for="rotationTickBucketSizeMs">
-              Tick bucket size
-              <span class="pi-badge ms-1">{{ rotationTickBucketSizeMs }} ms</span>
-            </label>
-            <input
-              id="rotationTickBucketSizeMs"
-              v-model="rotationTickBucketSizeMs"
-              class="pi-range"
-              max="1000"
-              min="0"
-              step="50"
-              type="range"
-            />
-            <div class="pi-hint mb-2">
-              Aggregates ticks for this duration before firing the service call. Zero = one call per
-              tick.
+        <details class="pi-vars mt-2 mb-3">
+          <summary>Available variables</summary>
+          <div class="pi-vars-content">
+            <div class="pi-var-text">
+              <span v-pre class="pi-var-item">{{ ticks }}</span> — ticks rotated (negative =
+              left, positive = right).
             </div>
-          </ActionCard>
-        </template>
+            <div class="pi-var-text">
+              <span v-pre class="pi-var-item">{{ rotationPercent }}</span> — 0–100 rotation
+              percentage.
+            </div>
+            <div class="pi-var-text">
+              <span v-pre class="pi-var-item">{{ rotationAbsolute }}</span> — 0–255 absolute
+              rotation value.
+            </div>
+          </div>
+        </details>
+
+        <label class="pi-label" for="rotationTickMultiplier">
+          Tick multiplier
+          <span class="pi-badge ms-1">×{{ rotationTickMultiplier }}</span>
+        </label>
+        <input
+          id="rotationTickMultiplier"
+          v-model="rotationTickMultiplier"
+          class="pi-range"
+          max="10"
+          min="0.1"
+          step="0.1"
+          type="range"
+        />
+        <div class="pi-hint mb-3">Each dial tick is multiplied by this value.</div>
+
+        <label class="pi-label" for="rotationTickBucketSizeMs">
+          Tick bucket size
+          <span class="pi-badge ms-1">{{ rotationTickBucketSizeMs }} ms</span>
+        </label>
+        <input
+          id="rotationTickBucketSizeMs"
+          v-model="rotationTickBucketSizeMs"
+          class="pi-range"
+          max="1000"
+          min="0"
+          step="50"
+          type="range"
+        />
+        <div class="pi-hint mb-2">
+          Aggregates ticks for this duration before firing the service call. Zero = one call per
+          tick.
+        </div>
       </div>
 
       <!-- ── Save button ───────────────────────────────────────────────────── -->
@@ -377,7 +365,6 @@ import { Service } from '@/modules/pi/service'
 import { computed, onMounted, ref, watch } from 'vue'
 import ServiceCallConfiguration from '@/components/ServiceCallConfiguration.vue'
 import { ObjectUtils } from '@/modules/common/utils'
-import ActionCard from '@/components/ui/ActionCard.vue'
 import TypeaheadSelect from '@/components/ui/TypeaheadSelect.vue'
 import PiToggleRow from '@/components/ui/PiToggleRow.vue'
 import axios from 'axios'
@@ -509,16 +496,6 @@ watch(haConnectionState, (state) => {
 const isHaSettingsComplete = computed(() => {
   return serverUrl.value && accessToken.value
 })
-
-const anyActionConfigured = computed(
-  () =>
-    !!(
-      serviceShortPress.value?.serviceId ||
-      serviceLongPress.value?.serviceId ||
-      serviceTap.value?.serviceId ||
-      serviceRotation.value?.serviceId
-    )
-)
 
 const entityAttributes = computed(() => {
   let currentEntityState = currentStates.value.find((state) => state.entityId === entity.value)
