@@ -350,6 +350,21 @@ async function updateContextState(currentContext, domain, stateObject) {
     renderingConfig.labelTemplates = contextSettings.display.buttonLabels.split('\n')
   }
 
+  if (!renderingConfig.color) {
+    renderingConfig.color =
+      activeStates.value.indexOf(stateObject.state) !== -1
+        ? entityConfigFactory.colors.active
+        : entityConfigFactory.colors.neutral
+  }
+
+  const entityPicture = stateObject.attributes?.entity_picture
+  if (entityPicture && globalSettings.value?.serverUrl) {
+    renderingConfig.backgroundImage = await fetchEntityPictureAsDataUri(
+      entityPicture,
+      globalSettings.value.serverUrl
+    )
+  }
+
   if (isEncoder(contextSettings)) {
     if (!renderingConfig.feedbackLayout) {
       renderingConfig.feedbackLayout = '$A1'
@@ -359,10 +374,7 @@ async function updateContextState(currentContext, domain, stateObject) {
     if (!renderingConfig.feedback) {
       renderingConfig.feedback = {}
     }
-    renderingConfig.feedback.title = renderingConfig.customTitle ? renderingConfig.customTitle : ''
-    renderingConfig.feedback.icon =
-      'data:image/svg+xml;charset=utf8,' +
-      svgUtils.renderIconSVG(renderingConfig.icon, renderingConfig.color)
+    renderingConfig.feedback.title = renderingConfig.customTitle ?? ''
     if (renderingConfig.feedback.value === undefined) {
       renderingConfig.feedback.value = svgUtils
         .renderTemplates(renderingConfig.labelTemplates, {
@@ -371,6 +383,9 @@ async function updateContextState(currentContext, domain, stateObject) {
         })
         .join(' ')
     }
+    renderingConfig.feedback.icon = await svgToJpegDataUri(
+      svgUtils.renderButtonSVG({ ...renderingConfig, labelTemplates: [] }, stateObject)
+    )
     $SD.value.setFeedback(currentContext, renderingConfig.feedback)
   } else if (contextSettings.display.useStateImagesForOnOffStates) {
     if (renderingConfig.customTitle) {
@@ -387,28 +402,11 @@ async function updateContextState(currentContext, domain, stateObject) {
     if (renderingConfig.customTitle) {
       $SD.value.setTitle(currentContext, renderingConfig.customTitle)
     }
-
-    if (!renderingConfig.color) {
-      renderingConfig.color =
-        activeStates.value.indexOf(stateObject.state) !== -1
-          ? entityConfigFactory.colors.active
-          : entityConfigFactory.colors.neutral
-    }
-
-    const entityPicture = stateObject.attributes?.entity_picture
-    if (entityPicture && globalSettings.value?.serverUrl) {
-      renderingConfig.backgroundImage = await fetchEntityPictureAsDataUri(
-        entityPicture,
-        globalSettings.value.serverUrl
-      )
-    }
-
-    const buttonSVG = svgUtils.renderButtonSVG(renderingConfig, stateObject)
-    await setButtonSVG(buttonSVG, currentContext)
+    await setButtonSVG(svgUtils.renderButtonSVG(renderingConfig, stateObject), currentContext)
   }
 }
 
-async function setButtonSVG(svg, changedContext) {
+async function svgToJpegDataUri(svg) {
   const svgBlob = new Blob([svg], { type: 'image/svg+xml' })
   const blobUrl = URL.createObjectURL(svgBlob)
   return new Promise((resolve) => {
@@ -419,16 +417,18 @@ async function setButtonSVG(svg, changedContext) {
       canvas.width = 288
       canvas.height = 288
       canvas.getContext('2d').drawImage(img, 0, 0)
-      $SD.value.setImage(changedContext, canvas.toDataURL('image/jpeg', 0.92))
-      resolve()
+      resolve(canvas.toDataURL('image/jpeg', 0.92))
     }
     img.onerror = () => {
       URL.revokeObjectURL(blobUrl)
-      $SD.value.setImage(changedContext, 'data:image/svg+xml;,' + svg)
-      resolve()
+      resolve('data:image/svg+xml;,' + svg)
     }
     img.src = blobUrl
   })
+}
+
+async function setButtonSVG(svg, changedContext) {
+  $SD.value.setImage(changedContext, await svgToJpegDataUri(svg))
 }
 
 function buttonDown(context) {
