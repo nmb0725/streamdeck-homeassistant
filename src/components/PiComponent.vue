@@ -261,7 +261,16 @@
 
         <!-- Label font size -->
         <div class="pi-form-row">
-          <label class="pi-label" for="labelFontSize">Label font size: {{ labelFontSize }}px</label>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px">
+            <label class="pi-label" for="labelFontSize" style="margin: 0; flex: 1">Label font size: {{ labelFontSize }}px</label>
+            <button
+              v-if="labelFontSize !== 48"
+              class="pi-btn-icon"
+              style="font-size: 11px; padding: 2px 6px"
+              title="Reset to default"
+              @click="labelFontSize = 48"
+            >reset</button>
+          </div>
           <input
             id="labelFontSize"
             v-model.number="labelFontSize"

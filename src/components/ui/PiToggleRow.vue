@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="pi-toggle-row">
-      <label class="pi-toggle-label" :for="id">{{ label }}</label>
       <div class="pi-toggle">
         <input
           :id="id"
@@ -11,6 +10,7 @@
         />
         <label :for="id"></label>
       </div>
+      <label class="pi-toggle-label" :for="id">{{ label }}</label>
     </div>
     <div v-if="modelValue && $slots.default" class="pi-toggle-content">
       <slot></slot>
