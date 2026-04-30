@@ -335,6 +335,7 @@ async function updateContextState(currentContext, domain, stateObject) {
   renderingConfig.isAction = contextSettings.button.serviceShortPress.serviceId && showIndicators
   renderingConfig.isMultiAction =
     contextSettings.button.serviceLongPress.serviceId && showIndicators
+  renderingConfig.labelFontSize = contextSettings.display.labelFontSize ?? 48
 
   if (renderingConfig.rotationPercent !== undefined) {
     rotationPercent[currentContext] = renderingConfig.rotationPercent

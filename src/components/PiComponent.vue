@@ -258,6 +258,20 @@
             </div>
           </details>
         </PiToggleRow>
+
+        <!-- Label font size -->
+        <div class="pi-form-row">
+          <label class="pi-label" for="labelFontSize">Label font size: {{ labelFontSize }}px</label>
+          <input
+            id="labelFontSize"
+            v-model.number="labelFontSize"
+            type="range"
+            class="pi-range"
+            min="12"
+            max="72"
+            step="2"
+          />
+        </div>
       </div>
 
       <!-- ── Short Press pane ─────────────────────────────────────────────── -->
@@ -401,6 +415,7 @@ const buttonLabels = ref('')
 const enableServiceIndicator = ref(true)
 const iconSettings = ref('PREFER_PLUGIN')
 const iconLayout = ref('STANDARD')
+const labelFontSize = ref(48)
 const availableEntityDomains = ref([])
 const availableEntities = ref([])
 const entityItems = computed(() =>
@@ -464,6 +479,7 @@ onMounted(() => {
         settings['display']['enableServiceIndicator'] === undefined
       iconSettings.value = settings['display']['iconSettings']
       iconLayout.value = settings['display']['iconLayout'] ?? 'STANDARD'
+      labelFontSize.value = settings['display']['labelFontSize'] ?? 48
       useCustomTitle.value = settings['display']['useCustomTitle']
       buttonTitle.value = settings['display']['buttonTitle'] || '{{friendly_name}}'
       useCustomButtonLabels.value = settings['display']['useCustomButtonLabels']
@@ -616,7 +632,7 @@ function saveGlobalSettings() {
 
 function saveSettings() {
   let settings = {
-    version: 6,
+    version: 7,
 
     controllerType: controllerType.value,
 
@@ -627,6 +643,7 @@ function saveSettings() {
       enableServiceIndicator: enableServiceIndicator.value,
       iconSettings: iconSettings.value,
       iconLayout: iconLayout.value,
+      labelFontSize: labelFontSize.value,
       useCustomButtonLabels: useCustomButtonLabels.value,
       buttonLabels: buttonLabels.value,
       useStateImagesForOnOffStates: useStateImagesForOnOffStates.value // determined by action ID (manifest)

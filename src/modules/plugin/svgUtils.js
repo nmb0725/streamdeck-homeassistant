@@ -4,7 +4,6 @@ import nunjucks from 'nunjucks'
 
 const WIDTH = 288
 const HEIGHT = 288
-const FONT_SIZE = 48
 const BG_OVERLAY_OPACITY = 0.55
 
 export class SvgUtils {
@@ -20,7 +19,8 @@ export class SvgUtils {
       renderingConfig.isAction,
       renderingConfig.isMultiAction,
       renderingConfig.iconLayout ?? 'STANDARD',
-      renderingConfig.backgroundImage ?? null
+      renderingConfig.backgroundImage ?? null,
+      renderingConfig.labelFontSize ?? 48
     )
   }
 
@@ -40,7 +40,8 @@ export class SvgUtils {
     isAction = false,
     isMultiAction = false,
     iconLayout = 'STANDARD',
-    backgroundImage = null
+    backgroundImage = null,
+    fontSize = 48
   ) {
     const backgroundSvg = backgroundImage
       ? `<image href="${backgroundImage}" x="0" y="0" width="${WIDTH}" height="${HEIGHT}" preserveAspectRatio="xMidYMid slice"/>` +
@@ -83,9 +84,9 @@ export class SvgUtils {
     const textLines = flatLabels
       .slice(0, maxLines)
       .map((line, i) => {
-        const y = quarterOfArea - (quarterOfArea * 1.2 - FONT_SIZE) / 2 + (i + labelIndexOffset) * quarterOfArea
+        const y = quarterOfArea - (quarterOfArea * 1.2 - fontSize) / 2 + (i + labelIndexOffset) * quarterOfArea
         const escaped = this.#escapeXml(line)
-        const baseAttrs = `x="${WIDTH / 2}" y="${y}" font-family="sans-serif" font-weight="bold" font-size="${FONT_SIZE}px" text-anchor="middle"`
+        const baseAttrs = `x="${WIDTH / 2}" y="${y}" font-family="sans-serif" font-weight="bold" font-size="${fontSize}px" text-anchor="middle"`
         if (iconLayout === 'FULL') {
           return (
             `<text ${baseAttrs} fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round">${escaped}</text>` +

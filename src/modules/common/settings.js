@@ -132,6 +132,13 @@ export class Settings {
     }
 
     if (settings.version === 6) {
+      let settingsV7 = { ...settings, display: { ...settings.display } }
+      settingsV7.version = 7
+      settingsV7.display.labelFontSize = 48
+      return this.parse(settingsV7)
+    }
+
+    if (settings.version === 7) {
       return settings
     }
   }
