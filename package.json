@@ -8,13 +8,14 @@
     "validate": "streamdeck validate --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
     "build-dev": "vite build --mode development --sourcemap inline --minify false",
     "bundle": "streamdeck bundle -f --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
+    "bundle-dev": "vite build --mode development --sourcemap inline --minify false && streamdeck bundle -f --no-update-check ./de.perdoctus.streamdeck.homeassistant.sdPlugin",
     "lint": "eslint . --fix",
     "format": "prettier --write src/"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
-    "axios": "1.13.5",
+    "axios": "1.15.0",
     "core-js": "^3.46.0",
     "home-assistant-js-websocket": "^9.6.0",
     "js-yaml": "4.1.1",

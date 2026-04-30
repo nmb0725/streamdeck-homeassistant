@@ -62,7 +62,7 @@ async function fetchEntityPictureAsDataUri(entityPictureUrl, serverUrl) {
         const w = img.width * scale
         const h = img.height * scale
         ctx.drawImage(img, (288 - w) / 2, 0, w, h)
-        const dataUri = canvas.toDataURL('image/jpeg', 0.20)
+        const dataUri = canvas.toDataURL('image/jpeg', 0.2)
         setCachedImage(fullUrl, dataUri)
         resolve(dataUri)
       }
@@ -96,9 +96,12 @@ onMounted(async () => {
     $SD.value = new StreamDeck(inPort, inPluginUUID, inRegisterEvent, inInfo, '{}')
 
     $SD.value.on('globalsettings', (inGlobalSettings) => {
-      console.log('Got global settings.')
+      $SD.value.log('Got global settings.')
+      const originalJson = JSON.stringify(inGlobalSettings)
       const migratedSettings = GlobalSettings.migrate(inGlobalSettings)
-      $SD.value.saveGlobalSettings(migratedSettings)
+      if (JSON.stringify(migratedSettings) !== originalJson) {
+        $SD.value.saveGlobalSettings(migratedSettings)
+      }
       globalSettings.value = migratedSettings
       entityConfigFactory = new EntityConfigFactory(
         migratedSettings.displayConfiguration?.urlOverride ||
@@ -465,8 +468,6 @@ function callService(context, serviceToCall, serviceDataAttributes = {}) {
   if (!serviceToCall['serviceId']) return
 
   try {
-    const serviceIdParts = serviceToCall.serviceId.split('.')
-
     let serviceData = null
     if (serviceToCall.serviceData) {
       let renderedServiceData = nunjucks.renderString(
@@ -476,22 +477,21 @@ function callService(context, serviceToCall, serviceDataAttributes = {}) {
       serviceData = JSON.parse(renderedServiceData)
     }
 
-    if (serviceIdParts[0] === 'streamdeck') {
-      if (serviceIdParts[1] === 'open_url') {
-        const url = serviceData?.url
-        if (url) {
-          $SD.value.openUrl(url)
-        } else {
-          $SD.value.showAlert(context)
-        }
+    if (serviceToCall.serviceId === 'streamdeck.open_url') {
+      const url = serviceData?.url
+      if (url) {
+        $SD.value.openUrl(url)
+      } else {
+        $SD.value.showAlert(context)
       }
       return
     }
 
+    const serviceIdParts = serviceToCall.serviceId.split('.')
     if ($HA.value) {
       $HA.value.callService(
-        serviceIdParts[1],
         serviceIdParts[0],
+        serviceIdParts[1],
         serviceToCall.entityId,
         serviceData
       )

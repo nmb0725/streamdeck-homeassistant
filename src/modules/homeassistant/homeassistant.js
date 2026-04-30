@@ -72,8 +72,8 @@ export class Homeassistant {
     })
   }
 
-  callService(service, domain, entity_id = null, serviceData = null) {
+  callService(domain, service, entity_id = null, serviceData = {}) {
     const target = entity_id ? { entity_id } : undefined
-    haCallService(this._connection, domain, service, serviceData ?? {}, target)
+    haCallService(this._connection, domain, service, serviceData, target)
   }
 }
