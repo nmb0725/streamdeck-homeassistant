@@ -1,7 +1,9 @@
 .DS_Store
+coverage
+test/logs
 node_modules
-/dist
-
+/de.perdoctus.streamdeck.homeassistant.sdPlugin
+*.streamDeckPlugin
 
 # local env files
 .env.local
